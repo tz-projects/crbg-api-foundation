@@ -1,43 +1,24 @@
 {
   "name": "api-foundation",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
-
-  "features": {
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": true,
-      "configureZshAsDefaultShell": true,
-      "installOhMyZsh": true,
-      "installOhMyZshConfig": true,
-      "username": "vscode"
-    },
-    "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.12",
-      "installTools": false
-    },
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "20",
-      "nodeGypDependencies": true
-    }
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
   },
 
   "containerEnv": {
     "PYTHONDONTWRITEBYTECODE": "1",
     "PYTHONUNBUFFERED": "1",
     "PIP_DISABLE_PIP_VERSION_CHECK": "1",
-    "UV_LINK_MODE": "copy",
-    "PNPM_HOME": "/home/vscode/.local/share/pnpm"
-  },
-
-  "remoteEnv": {
-    "PATH": "/home/vscode/.local/bin:/home/vscode/.local/share/pnpm:${containerEnv:PATH}"
+    "UV_LINK_MODE": "copy"
   },
 
   "postCreateCommand": "bash .devcontainer/post-create.sh",
 
   "customizations": {
     "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh"
+      },
       "extensions": [
         "ms-python.python",
         "ms-python.vscode-pylance",
