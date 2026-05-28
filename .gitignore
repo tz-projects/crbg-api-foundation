@@ -1,0 +1,57 @@
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# --- Secrets / local env ---
+.env
+.env.*
+!.env.example
+.envrc.local
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.python-version-local
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pytype/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# --- Node / TypeScript ---
+node_modules/
+.pnpm-store/
+*.tsbuildinfo
+.next/
+.cache/
+.turbo/
+.vitest-cache/
+coverage/
+
+# --- Build outputs ---
+out/
+build/
+
+# --- Scanner outputs (local artifacts, not source) ---
+projects/*/output/
+projects/*/reports/
+projects/*/*.local.*
+
+# --- Direnv ---
+.direnv/
+
+# --- Claude Code (per-machine local settings) ---
+.claude/settings.local.json
