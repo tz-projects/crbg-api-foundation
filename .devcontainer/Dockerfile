@@ -9,6 +9,8 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
 ARG NODE_MAJOR=20
+# pnpm 11+ requires Node 22.13; pin to 10.x (last major supporting Node 20 LTS).
+ARG PNPM_VERSION=10
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -33,7 +35,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && corepack enable \
-    && corepack prepare pnpm@latest --activate
+    && corepack prepare "pnpm@${PNPM_VERSION}" --activate
 
 # --- GitHub CLI (gh) ----------------------------------------------------
 RUN mkdir -p -m 755 /etc/apt/keyrings \

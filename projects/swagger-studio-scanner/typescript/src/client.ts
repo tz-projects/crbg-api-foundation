@@ -1,15 +1,40 @@
 /**
  * SwaggerHub REST client.
  *
- * Thin typed wrapper over Node's native `fetch`. Owns auth, base URL,
- * timeouts, and concurrency control via p-limit. Anything that talks to
- * Studio goes through this class so retry/backoff/rate-limit policy lives
- * in exactly one place.
+ * Thin typed wrapper over Node's native `fetch`. Single responsibility:
+ * own auth, base URL, timeouts, and concurrency, and expose a typed
+ * surface for the endpoints the scanner needs. All payload interpretation
+ * lives in `parsers.ts` — that separation keeps the wire-shape grammar in
+ * one place and lets us unit-test adapters without a network.
+ *
+ * Three high-level operations:
+ *
+ *  - `listApiVersions`   — async-iterates `{ ref, meta }` for every API
+ *                           version under an org.
+ *  - `getFindings`       — fetches + parses standardization findings for
+ *                           one API version, using the injected
+ *                           `FindingParser`.
+ *  - `getActiveRuleset`  — returns the active org ruleset, or `null` when
+ *                           the endpoint is unavailable / unrecognized.
  */
 
 import pLimit, { type LimitFunction } from "p-limit";
 
 import type { Settings } from "./config.js";
+import type {
+  ApiRef,
+  Finding,
+  ListedApi,
+  RulesetMeta,
+} from "./models.js";
+import {
+  DEFAULT_FINDING_PARSER,
+  extractApiItems,
+  extractApiMeta,
+  extractApiRef,
+  parseRulesetPayload,
+  type FindingParser,
+} from "./parsers.js";
 
 export class SwaggerHubHttpError extends Error {
   constructor(
@@ -23,15 +48,19 @@ export class SwaggerHubHttpError extends Error {
 }
 
 export class SwaggerHubClient {
+  private static readonly PAGE_SIZE = 100;
+
   private readonly limit: LimitFunction;
   private readonly baseUrl: string;
   private readonly headers: Record<string, string>;
   private readonly timeoutMs: number;
+  private readonly findingParser: FindingParser;
 
-  constructor(settings: Settings) {
+  constructor(settings: Settings, findingParser: FindingParser = DEFAULT_FINDING_PARSER) {
     this.limit = pLimit(settings.scannerConcurrency);
     this.baseUrl = settings.swaggerhubBaseUrl.replace(/\/$/, "");
     this.timeoutMs = settings.scannerRequestTimeoutMs;
+    this.findingParser = findingParser;
     this.headers = {
       Authorization: settings.swaggerhubApiKey,
       Accept: "application/json",
@@ -55,6 +84,62 @@ export class SwaggerHubClient {
         clearTimeout(timer);
       }
     });
+  }
+
+  // --- High-level operations ----------------------------------------------
+
+  /** Yield identity + metadata for every API version under `owner`. */
+  async *listApiVersions(owner: string): AsyncIterableIterator<ListedApi> {
+    let page = 0;
+    while (true) {
+      const data = await this.getJson<unknown>(`/apis/${owner}`, {
+        page,
+        limit: SwaggerHubClient.PAGE_SIZE,
+      });
+      const items = extractApiItems(data);
+      if (items.length === 0) return;
+      for (const item of items) {
+        const ref = extractApiRef(item);
+        if (ref) yield { ref, meta: extractApiMeta(item) };
+      }
+      if (items.length < SwaggerHubClient.PAGE_SIZE) return;
+      page += 1;
+    }
+  }
+
+  /**
+   * Fetch and parse standardization findings for one API version.
+   *
+   * Empty result can mean *clean* OR *tier doesn't include Governance* —
+   * callers decide what to do with empty results, based on the probe outcome.
+   */
+  async getFindings(api: ApiRef): Promise<Finding[]> {
+    const path = `/apis/${api.owner}/${api.name}/${api.version}/standardization`;
+    const data = await this.getJson<Record<string, unknown>>(path);
+    const raw =
+      (data["validation"] as unknown) ??
+      (data["standardization"] as unknown) ??
+      (data["findings"] as unknown) ??
+      [];
+    if (!Array.isArray(raw)) return [];
+    return raw.map((e) => this.findingParser.parse(e));
+  }
+
+  /**
+   * Return the active org standardization ruleset, or `null` on miss.
+   *
+   * The endpoint shape is not officially documented; this is best-effort and
+   * intentionally swallows HTTP errors (including 404). A scan must not
+   * fail because ruleset metadata is unavailable.
+   */
+  async getActiveRuleset(owner: string): Promise<RulesetMeta | null> {
+    try {
+      const data = await this.getJson<unknown>(`/orgs/${owner}/standardization`);
+      return parseRulesetPayload(data);
+    } catch (err: unknown) {
+      if (err instanceof SwaggerHubHttpError) return null;
+      throw err;
+    }
   }
 
   private buildUrl(path: string, params?: Record<string, string | number>): string {

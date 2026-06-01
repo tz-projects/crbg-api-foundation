@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SwaggerHub Governance Scan</title>
+<style>
+  :root {
+    --bg: #f7f9fc; --fg: #1a202c; --muted: #6b7280;
+    --pass: #16a34a; --warn: #ca8a04; --fail: #dc2626; --error: #6b7280;
+    --critical: #dc2626; --warning: #ca8a04; --info: #6b7280;
+    --border: #e5e7eb; --card: #ffffff; --accent: #2563eb;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         background: var(--bg); color: var(--fg); margin: 0; padding: 2rem; line-height: 1.5; }
+  h1 { margin: 0 0 0.25rem; font-size: 1.75rem; }
+  h2 { margin: 2rem 0 0.75rem; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+  .meta { color: var(--muted); margin-bottom: 1.5rem; font-size: 0.9rem; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+           gap: 0.75rem; margin-bottom: 1rem; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+          padding: 0.9rem 1rem; }
+  .card .label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .card .value { font-size: 1.6rem; font-weight: 600; margin-top: 0.2rem; }
+  .pill { display: inline-block; padding: 0.1rem 0.55rem; border-radius: 999px;
+          font-size: 0.78rem; font-weight: 500; color: white; }
+  .pill.pass { background: var(--pass); }
+  .pill.warn { background: var(--warn); }
+  .pill.fail { background: var(--fail); }
+  .pill.error { background: var(--error); }
+  .pill.CRITICAL { background: var(--critical); }
+  .pill.WARNING { background: var(--warning); }
+  .pill.INFO { background: var(--info); }
+  table { width: 100%; border-collapse: collapse; background: var(--card);
+          border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  th, td { padding: 0.55rem 0.85rem; text-align: left; border-bottom: 1px solid var(--border);
+           font-size: 0.92rem; vertical-align: top; }
+  th { background: #f1f5f9; font-weight: 600; font-size: 0.82rem; text-transform: uppercase;
+       letter-spacing: 0.05em; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  details { background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+            padding: 0.6rem 1rem; margin-top: 0.5rem; }
+  details summary { cursor: pointer; font-weight: 500; }
+  .findings-table { margin-top: 0.75rem; }
+  .findings-table th, .findings-table td { font-size: 0.85rem; }
+  .empty { color: var(--muted); font-style: italic; padding: 1.5rem; text-align: center; }
+  .bar { background: var(--accent); height: 6px; border-radius: 3px; display: block; opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<h1>SwaggerHub Governance Scan</h1>
+<div class="meta">Generated {{ generated_at }}</div>
+
+<h2>Summary</h2>
+<div class="cards">
+  <div class="card"><div class="label">APIs scanned</div><div class="value">{{ summary.total_apis }}</div></div>
+  <div class="card"><div class="label">Pass</div><div class="value" style="color: var(--pass);">{{ summary.passed }}</div></div>
+  <div class="card"><div class="label">Warn</div><div class="value" style="color: var(--warn);">{{ summary.warned }}</div></div>
+  <div class="card"><div class="label">Fail</div><div class="value" style="color: var(--fail);">{{ summary.failed }}</div></div>
+  <div class="card"><div class="label">Error</div><div class="value" style="color: var(--error);">{{ summary.errored }}</div></div>
+  <div class="card"><div class="label">Total findings</div><div class="value">{{ summary.total_findings }}</div></div>
+  <div class="card"><div class="label">Critical</div><div class="value" style="color: var(--critical);">{{ summary.critical_findings }}</div></div>
+  <div class="card"><div class="label">Warning</div><div class="value" style="color: var(--warning);">{{ summary.warning_findings }}</div></div>
+</div>
+
+<h2>Rule Pareto — what to fix first</h2>
+{% if pareto %}
+<table>
+  <thead>
+    <tr><th>#</th><th>Rule</th><th>Severity</th><th class="num">Count</th><th class="num">Share</th><th class="num">Cumulative</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for entry in pareto %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td><code>{{ entry.rule }}</code></td>
+      <td><span class="pill {{ entry.severity.value }}">{{ entry.severity.value }}</span></td>
+      <td class="num">{{ entry.count }}</td>
+      <td class="num">{{ entry.share_pct }}%</td>
+      <td class="num">{{ entry.cumulative_pct }}%</td>
+      <td style="width: 25%;"><span class="bar" style="width: {{ entry.share_pct }}%;"></span></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty">No findings — every API came back clean (or the org has no APIs).</div>
+{% endif %}
+
+<h2>Top failing APIs</h2>
+{% if top_failing %}
+<table>
+  <thead>
+    <tr><th>API</th><th>Status</th><th class="num">Findings</th><th class="num">Critical</th></tr>
+  </thead>
+  <tbody>
+    {% for result, total in top_failing %}
+    <tr>
+      <td><code>{{ result.api.slug }}</code></td>
+      <td><span class="pill {{ result.status.value }}">{{ result.status.value }}</span></td>
+      <td class="num">{{ total }}</td>
+      <td class="num">{{ result.critical_count }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty">Nothing to flag — no APIs in fail/warn state.</div>
+{% endif %}
+
+<h2>All results</h2>
+{% for result in results %}
+  <details>
+    <summary>
+      <code>{{ result.api.slug }}</code>
+      <span class="pill {{ result.status.value }}">{{ result.status.value }}</span>
+      {% if result.findings %}— {{ result.findings|length }} finding(s){% endif %}
+      {% if result.error %}— <span style="color: var(--fail);">{{ result.error }}</span>{% endif %}
+    </summary>
+    {% if result.findings %}
+    <table class="findings-table">
+      <thead><tr><th>Rule</th><th>Severity</th><th>Description</th><th>Line</th><th>Path</th></tr></thead>
+      <tbody>
+        {% for f in result.findings %}
+        <tr>
+          <td><code>{{ f.rule }}</code></td>
+          <td><span class="pill {{ f.severity.value }}">{{ f.severity.value }}</span></td>
+          <td>{{ f.description }}</td>
+          <td class="num">{{ f.line if f.line is not none else "" }}</td>
+          <td><code>{{ f.path or "" }}</code></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </details>
+{% endfor %}
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+# Standalone rule — kept in its own file for visibility.
+#
+# Disallows API keys / secrets being passed as URL query parameters or path
+# segments. URLs end up in access logs, browser history, and intermediary
+# caches, so secrets in URLs are a recurring incident root cause. Worth
+# having a single, named file in `git blame` for changes here.
+
+rules:
+  security-no-api-key-in-url:
+    description: >
+      Disallow `apiKey` security schemes that pass the key in `query` or any
+      path segment. URLs leak into logs, telemetry, and bookmarks; keys in
+      URLs are practically impossible to redact after the fact.
+    message: "API keys must not be passed in the URL (use `in: header` instead)"
+    severity: error
+    given: "$.components.securitySchemes[?(@.type=='apiKey')]"
+    then:
+      field: in
+      function: pattern
+      functionOptions:
+        notMatch: "^(query|path)$"

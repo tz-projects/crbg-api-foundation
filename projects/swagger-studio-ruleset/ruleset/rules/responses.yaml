@@ -1,0 +1,25 @@
+# Category: response standards.
+#
+# Rules governing what shape responses must take. Drives consistent error
+# handling and documentation across the org.
+
+rules:
+  response-description:
+    description: Every response must have a non-trivial description.
+    message: "Response description must be present (>= 5 chars)"
+    severity: warn
+    given: "$.paths[*][*].responses[*]"
+    then:
+      field: description
+      function: length
+      functionOptions:
+        min: 5
+
+  response-success-content:
+    description: 2xx responses must include a content schema (no empty success responses).
+    message: "2xx response must declare content"
+    severity: error
+    given: "$.paths[*][*].responses[?(@property.match(/^2[0-9][0-9]$/))]"
+    then:
+      field: content
+      function: truthy

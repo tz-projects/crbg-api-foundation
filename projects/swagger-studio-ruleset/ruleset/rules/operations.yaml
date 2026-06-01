@@ -1,0 +1,43 @@
+# Category: per-operation hygiene.
+#
+# Rules that fire on individual HTTP operations (get/post/put/patch/delete/...).
+# These rules make operations addressable in codegen, documentation, and tracing.
+
+rules:
+  operation-operationId:
+    description: Every operation must have an operationId for codegen and tracing.
+    message: "Every operation must have an operationId"
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete,head,options]"
+    then:
+      field: operationId
+      function: truthy
+
+  operation-tags:
+    description: Every operation must have at least one tag so it can be grouped in catalogs.
+    message: "Every operation must have at least one tag"
+    severity: warn
+    given: "$.paths[*][get,post,put,patch,delete,head,options]"
+    then:
+      field: tags
+      function: truthy
+
+  operation-summary:
+    description: Every operation must have a one-line summary.
+    message: "Every operation must have a summary"
+    severity: warn
+    given: "$.paths[*][get,post,put,patch,delete,head,options]"
+    then:
+      field: summary
+      function: truthy
+
+  operation-description:
+    description: Every operation must have a multi-line description (>= 20 chars).
+    message: "Every operation must have a description (>= 20 chars)"
+    severity: warn
+    given: "$.paths[*][get,post,put,patch,delete,head,options]"
+    then:
+      field: description
+      function: length
+      functionOptions:
+        min: 20

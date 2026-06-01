@@ -9,9 +9,15 @@ Workspace for the API Foundation initiative. Holds the tooling that drives API g
 ├── .devcontainer/              # Reproducible dev environment (Python + Node + SwaggerHub CLI)
 ├── .vscode/                    # Shared editor settings & recommended extensions
 ├── projects/                   # One folder per sub-project
-│   └── swagger-studio-scanner/ # Org-wide non-conformance scanner (Phase 1)
-│       ├── python/             # Python implementation (uv + ruff + mypy + pytest)
-│       └── typescript/         # TypeScript implementation (pnpm + eslint + prettier + vitest)
+│   ├── swagger-studio-scanner/ # Org-wide non-conformance scanner (Phase 1)
+│   │   ├── python/             # Python implementation (uv + ruff + mypy + pytest)
+│   │   └── typescript/         # TypeScript implementation (pnpm + eslint + prettier + vitest)
+│   ├── swagger-studio-ruleset/ # Source-of-truth Spectral ruleset + publisher
+│   │   ├── ruleset/            # Spectral rules (uploaded to Studio)
+│   │   ├── python/             # Publisher: CLI + REST backends
+│   │   └── typescript/         # Publisher: CLI + REST backends
+│   └── reports/                # Executive + platform team report generators (Phase 1)
+│                               # Stdlib-only Python; consume scan.json, emit self-contained HTML + CSV
 └── pnpm-workspace.yaml         # Monorepo workspace pointer for all TS sub-projects
 ```
 
@@ -52,7 +58,23 @@ pnpm dev -- --help           # CLI entry point
 pnpm test                    # Unit tests
 pnpm lint                    # ESLint
 pnpm typecheck               # tsc --noEmit
+
+# Ruleset publisher (Python)
+cd projects/swagger-studio-ruleset/python
+uv run ruleset-publisher publish                    # CLI backend (default)
+uv run ruleset-publisher publish --backend rest     # REST backend
+
+# Ruleset publisher (TypeScript)
+cd projects/swagger-studio-ruleset/typescript
+pnpm dev publish
+pnpm dev publish --backend rest
 ```
+
+## Day-to-day commands
+
+- [`docs/runbook.md`](docs/runbook.md) — consolidated command reference: per-sub-project commands, the full end-to-end demo loop (publish ruleset → push samples → scan → reports), reset between runs, troubleshooting matrix.
+- [`docs/reports.md`](docs/reports.md) — executive + platform team report generators, including the optional ownership map / rule display name / CoP guidance / asks file inputs.
+- [`docs/installation.md`](docs/installation.md) — native (work-laptop, no-Docker) install paths for the Python and TypeScript toolchains, plus corporate-network gotchas.
 
 ## Adding a new sub-project
 

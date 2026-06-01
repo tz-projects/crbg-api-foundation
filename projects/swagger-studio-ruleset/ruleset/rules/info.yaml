@@ -1,0 +1,44 @@
+# Category: info block.
+#
+# Rules governing the API's identity, ownership, and licensing metadata.
+# These rules answer "who owns this, how do I get hold of them, and under
+# what terms can I depend on it."
+
+rules:
+  info-contact:
+    description: API must declare a contact (info.contact) for ownership and incident response.
+    message: "info.contact is required"
+    severity: error
+    given: "$.info"
+    then:
+      field: contact
+      function: truthy
+
+  info-contact-email:
+    description: info.contact must include an email so incidents have a clear addressee.
+    message: "info.contact.email is required"
+    severity: error
+    given: "$.info.contact"
+    then:
+      field: email
+      function: truthy
+
+  info-license:
+    description: API must declare a license (info.license).
+    message: "info.license is required"
+    severity: error
+    given: "$.info"
+    then:
+      field: license
+      function: truthy
+
+  info-description:
+    description: API must include a non-empty description explaining what it does.
+    message: "info.description must be present and meaningful (>= 30 chars)"
+    severity: warn
+    given: "$.info"
+    then:
+      field: description
+      function: length
+      functionOptions:
+        min: 30

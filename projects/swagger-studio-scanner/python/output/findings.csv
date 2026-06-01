@@ -1,0 +1,19 @@
+owner,api,version,status,rule,severity,description,line,path,error,scanned_at
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,info-contact,CRITICAL,info-contact -> info.contact is required,1,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,info-license,CRITICAL,info-license -> info.license is required,1,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-operationId,CRITICAL,operation-operationId -> Every operation must have an operationId,16,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-summary,WARNING,operation-summary -> Every operation must have a summary,16,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-tags,WARNING,operation-tags -> Every operation must have at least one tag,16,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,response-success-content,CRITICAL,response-success-content -> 2xx response must declare content,18,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,response-description,WARNING,response-description -> Response description must be present (>= 5 chars),19,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-operationId,CRITICAL,operation-operationId -> Every operation must have an operationId,20,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-summary,WARNING,operation-summary -> Every operation must have a summary,20,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-tags,WARNING,operation-tags -> Every operation must have at least one tag,20,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,response-success-content,CRITICAL,response-success-content -> 2xx response must declare content,22,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,response-description,WARNING,response-description -> Response description must be present (>= 5 chars),23,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-operationId,CRITICAL,operation-operationId -> Every operation must have an operationId,25,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-summary,WARNING,operation-summary -> Every operation must have a summary,25,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-tags,WARNING,operation-tags -> Every operation must have at least one tag,25,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,response-success-content,CRITICAL,response-success-content -> 2xx response must declare content,33,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-bad-petstore,1.0.0,fail,response-description,WARNING,response-description -> Response description must be present (>= 5 chars),34,,,2026-05-29T21:12:46.934429+00:00
+sparklayerinc,scanner-good-petstore,1.0.0,pass,,,,,,,2026-05-29T21:12:46.934708+00:00

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>API Governance Findings — Platform Team Report — Acme Corporation</title>
+  <style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1a1a1a; background: #fff; margin: 0; padding: 24px 32px; max-width: 1200px; margin-left: auto; margin-right: auto;
+  }
+  h1 { margin: 0 0 4px; }
+  h2 { margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #e0e0e0; font-size: 18px; }
+  code { background: #f1f3f8; padding: 1px 6px; border-radius: 3px; font-size: 13px; }
+  .meta { color: #555; font-size: 13px; margin: 0 0 6px; }
+  .muted { color: #777; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .pill.pass { background: #e3f5e1; color: #225e1c; }
+  .pill.warn { background: #fff3cd; color: #7a5b00; }
+  .pill.fail { background: #fde2e1; color: #7a1d18; }
+  .pill.err  { background: #e5e7eb; color: #374151; }
+  .pill.sev-critical { background: #fde2e1; color: #7a1d18; }
+  .pill.sev-warning  { background: #fff3cd; color: #7a5b00; }
+  .pill.sev-info     { background: #e0ecff; color: #1a3d7a; }
+  .pill.sev-mixed    { background: #ede0ff; color: #4b2076; }
+  .pill.status-pass { background: #e3f5e1; color: #225e1c; }
+  .pill.status-warn { background: #fff3cd; color: #7a5b00; }
+  .pill.status-fail { background: #fde2e1; color: #7a1d18; }
+  .pill.status-error { background: #e5e7eb; color: #374151; }
+  .pill.pub-yes { background: #e0ecff; color: #1a3d7a; }
+  .pill.pub-no  { background: #f1ecff; color: #4b2076; }
+  .pill.default-yes { background: #f3f0e0; color: #5a4a14; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+  th { background: #f7f7f5; font-weight: 600; }
+  .filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 10px 0; }
+  .filters label { font-size: 13px; }
+  .filters select, .filters input { font-size: 13px; padding: 4px 6px; margin-left: 4px; }
+  .filters button, .pager button { font-size: 13px; padding: 4px 10px; cursor: pointer; }
+  .pager { display: flex; gap: 12px; align-items: center; margin-top: 10px; }
+  .table-wrap { overflow-x: auto; }
+  .rule-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 12px; }
+  .rule-card { border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px 14px; background: #fafafa; }
+  .rule-card header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+  .rule-card .rule-display { font-weight: 600; }
+  .rule-card p { margin: 6px 0; font-size: 13px; }
+  .rule-card .rule-desc { color: #333; }
+  .cell-sub { color: #777; font-size: 12px; }
+  .api-grid { display: grid; gap: 10px; }
+  .api-card { border: 1px solid #e6e6e6; border-radius: 4px; padding: 8px 12px; }
+  .api-card header { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .findings-list { font-size: 13px; padding-left: 18px; }
+  footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; font-size: 13px; color: #444; }
+</style>
+</head>
+<body>
+
+      <header>
+        <h1>API Governance Findings — Platform Team Report</h1>
+        <p class="meta">Acme Corporation &middot; scan May 29, 2026 &middot; ruleset version not recorded</p>
+        <p class="meta">
+          2 APIs scanned &middot;
+          <span class="pill pass">PASS 1</span>
+          <span class="pill warn">WARN 0</span>
+          <span class="pill fail">FAIL 1</span>
+          <span class="pill err">SCAN_ERROR 0</span>
+          &middot; 17 findings
+        </p>
+      </header>
+    
+
+      <section>
+        <h2>How to use this report</h2>
+        <ul>
+          <li>Use the filters above the findings table to narrow by team, rule, severity, or status.</li>
+          <li>Each rule card links to its CoP remediation guidance (when published).</li>
+          <li>Findings are sorted by API, then by severity descending.</li>
+          <li>Questions: contact the platform team.</li>
+          <li class="muted">Ownership map is not yet configured: team / domain columns and the per-team summary are unavailable; the report uses API age and rule grouping as substitutes.</li>
+          <li class="muted">CoP guidance lookup not provided — affected rows read &quot;guidance pending.&quot;</li>
+        </ul>
+      </section>
+    
+
+      <section>
+        <h2>Rule reference</h2>
+        <div class="rule-grid">
+          <article class="rule-card" id="rule-operation-operationId">
+            <header>
+              <code>operation-operationId</code>
+              <span class="rule-display">Operation operationId</span>
+              <span class="pill sev-critical">CRITICAL</span>
+            </header>
+            <p>APIs failing: <strong>1</strong>
+               &middot; Total findings: <strong>3</strong></p>
+            <p class="rule-desc">operation-operationId -&gt; Every operation must have an operationId</p>
+            <p class="muted">Example: sparklayerinc/scanner-bad-petstore/1.0.0 line 16: operation-operationId -&gt; Every operation must have an operationId</p>
+            <p><span class="muted">guidance pending &mdash; contact platform team</span></p>
+          </article>
+        
+          <article class="rule-card" id="rule-operation-summary">
+            <header>
+              <code>operation-summary</code>
+              <span class="rule-display">Operation summary</span>
+              <span class="pill sev-warning">WARNING</span>
+            </header>
+            <p>APIs failing: <strong>1</strong>
+               &middot; Total findings: <strong>3</strong></p>
+            <p class="rule-desc">operation-summary -&gt; Every operation must have a summary</p>
+            <p class="muted">Example: sparklayerinc/scanner-bad-petstore/1.0.0 line 16: operation-summary -&gt; Every operation must have a summary</p>
+            <p><span class="muted">guidance pending &mdash; contact platform team</span></p>
+          </article>
+        
+          <article class="rule-card" id="rule-operation-tags">
+            <header>
+              <code>operation-tags</code>
+              <span class="rule-display">Operation tags</span>
+              <span class="pill sev-warning">WARNING</span>
+            </header>
+            <p>APIs failing: <strong>1</strong>
+               &middot; Total findings: <strong>3</strong></p>
+            <p class="rule-desc">operation-tags -&gt; Every operation must have at least one tag</p>
+            <p class="muted">Example: sparklayerinc/scanner-bad-petstore/1.0.0 line 16: operation-tags -&gt; Every operation must have at least one tag</p>
+            <p><span class="muted">guidance pending &mdash; contact platform team</span></p>
+          </article>
+        
+          <article class="rule-card" id="rule-response-description">
+            <header>
+              <code>response-description</code>
+              <span class="rule-display">Response description</span>
+              <span class="pill sev-warning">WARNING</span>
+            </header>
+            <p>APIs failing: <strong>1</strong>
+               &middot; Total findings: <strong>3</strong></p>
+            <p class="rule-desc">response-description -&gt; Response description must be present (&gt;= 5 chars)</p>
+            <p class="muted">Example: sparklayerinc/scanner-bad-petstore/1.0.0 line 19: response-description -&gt; Response description must be present (&gt;= 5 chars)</p>
+            <p><span class="muted">guidance pending &mdash; contact platform team</span></p>
+          </article>
+        
+          <article class="rule-card" id="rule-response-success-content">
+            <header>
+              <code>response-success-content</code>
+              <span class="rule-display">Response success content</span>
+              <span class="pill sev-critical">CRITICAL</span>
+            </header>
+            <p>APIs failing: <strong>1</strong>
+               &middot; Total findings: <strong>3</strong></p>
+            <p class="rule-desc">response-success-content -&gt; 2xx response must declare content</p>
+            <p class="muted">Example: sparklayerinc/scanner-bad-petstore/1.0.0 line 18: response-success-content -&gt; 2xx response must declare content</p>
+            <p><span class="muted">guidance pending &mdash; contact platform team</span></p>
+          </article>
+        
+          <article class="rule-card" id="rule-info-contact">
+            <header>
+              <code>info-contact</code>
+              <span class="rule-display">Info contact</span>
+              <span class="pill sev-critical">CRITICAL</span>
+            </header>
+            <p>APIs failing: <strong>1</strong>
+               &middot; Total findings: <strong>1</strong></p>
+            <p class="rule-desc">info-contact -&gt; info.contact is required</p>
+            <p class="muted">Example: sparklayerinc/scanner-bad-petstore/1.0.0 line 1: info-contact -&gt; info.contact is required</p>
+            <p><span class="muted">guidance pending &mdash; contact platform team</span></p>
+          </article>
+        
+          <article class="rule-card" id="rule-info-license">
+            <header>
+              <code>info-license</code>
+              <span class="rule-display">Info license</span>
+              <span class="pill sev-critical">CRITICAL</span>
+            </header>
+            <p>APIs failing: <strong>1</strong>
+               &middot; Total findings: <strong>1</strong></p>
+            <p class="rule-desc">info-license -&gt; info.license is required</p>
+            <p class="muted">Example: sparklayerinc/scanner-bad-petstore/1.0.0 line 1: info-license -&gt; info.license is required</p>
+            <p><span class="muted">guidance pending &mdash; contact platform team</span></p>
+          </article>
+        </div>
+      </section>
+    
+
+      <section>
+        <h2>Findings (17)</h2>
+        <div class="filters">
+          
+          <label>Published <select id="f-published"><option value="">all</option><option value="yes">yes</option><option value="no">no (draft)</option><option value="unknown">unknown</option></select></label>
+          <label>Severity <select id="f-severity"><option value="">all</option><option>CRITICAL</option><option>WARNING</option><option>INFO</option></select></label>
+          <label>Status <select id="f-status"><option value="">all</option><option>PASS</option><option>WARN</option><option>FAIL</option><option>ERROR</option></select></label>
+          <label>Rule <select id="f-rule"><option value="">all</option><option value="info-contact">info-contact</option><option value="info-license">info-license</option><option value="operation-operationId">operation-operationId</option><option value="operation-summary">operation-summary</option><option value="operation-tags">operation-tags</option><option value="response-description">response-description</option><option value="response-success-content">response-success-content</option></select></label>
+          <label>Search <input id="f-search" type="search" placeholder="API name…" /></label>
+          <button id="dl-csv" type="button">Download filtered CSV</button>
+        </div>
+        <p id="row-status" class="muted"></p>
+        <div class="table-wrap">
+          <table id="findings-table">
+            <thead><tr><th>Published</th><th>API</th><th>Version</th><th>Rule</th><th>Severity</th><th>Line</th><th>Message</th><th>Links</th><th>Created</th><th>Modified</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <button id="prev" type="button">Prev</button>
+          <span id="page-info"></span>
+          <button id="next" type="button">Next</button>
+        </div>
+        <script id="findings-data" type="application/json">[{"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "info-contact", "rule_display": "Info contact", "severity": "CRITICAL", "status": "FAIL", "line": 1, "message": "info-contact -> info.contact is required", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "info-license", "rule_display": "Info license", "severity": "CRITICAL", "status": "FAIL", "line": 1, "message": "info-license -> info.license is required", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "operation-operationId", "rule_display": "Operation operationId", "severity": "CRITICAL", "status": "FAIL", "line": 16, "message": "operation-operationId -> Every operation must have an operationId", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "operation-summary", "rule_display": "Operation summary", "severity": "WARNING", "status": "FAIL", "line": 16, "message": "operation-summary -> Every operation must have a summary", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "operation-tags", "rule_display": "Operation tags", "severity": "WARNING", "status": "FAIL", "line": 16, "message": "operation-tags -> Every operation must have at least one tag", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "response-success-content", "rule_display": "Response success content", "severity": "CRITICAL", "status": "FAIL", "line": 18, "message": "response-success-content -> 2xx response must declare content", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "response-description", "rule_display": "Response description", "severity": "WARNING", "status": "FAIL", "line": 19, "message": "response-description -> Response description must be present (>= 5 chars)", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "operation-operationId", "rule_display": "Operation operationId", "severity": "CRITICAL", "status": "FAIL", "line": 20, "message": "operation-operationId -> Every operation must have an operationId", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "operation-summary", "rule_display": "Operation summary", "severity": "WARNING", "status": "FAIL", "line": 20, "message": "operation-summary -> Every operation must have a summary", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "operation-tags", "rule_display": "Operation tags", "severity": "WARNING", "status": "FAIL", "line": 20, "message": "operation-tags -> Every operation must have at least one tag", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "response-success-content", "rule_display": "Response success content", "severity": "CRITICAL", "status": "FAIL", "line": 22, "message": "response-success-content -> 2xx response must declare content", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "response-description", "rule_display": "Response description", "severity": "WARNING", "status": "FAIL", "line": 23, "message": "response-description -> Response description must be present (>= 5 chars)", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "operation-operationId", "rule_display": "Operation operationId", "severity": "CRITICAL", "status": "FAIL", "line": 25, "message": "operation-operationId -> Every operation must have an operationId", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "operation-summary", "rule_display": "Operation summary", "severity": "WARNING", "status": "FAIL", "line": 25, "message": "operation-summary -> Every operation must have a summary", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "operation-tags", "rule_display": "Operation tags", "severity": "WARNING", "status": "FAIL", "line": 25, "message": "operation-tags -> Every operation must have at least one tag", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "response-success-content", "rule_display": "Response success content", "severity": "CRITICAL", "status": "FAIL", "line": 33, "message": "response-success-content -> 2xx response must declare content", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}, {"team": "", "api_owner": "sparklayerinc", "api_name": "scanner-bad-petstore", "api_version": "1.0.0", "api_slug": "sparklayerinc/scanner-bad-petstore/1.0.0", "rule_id": "response-description", "rule_display": "Response description", "severity": "WARNING", "status": "FAIL", "line": 34, "message": "response-description -> Response description must be present (>= 5 chars)", "studio_url": "https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0", "cop_url": "", "created_at": "2026-05-28T19:24:59+00:00", "modified_at": "2026-05-29T01:49:02+00:00", "is_published": false, "is_default_version": null}]</script>
+        <script id="findings-options" type="application/json">{"showTeam": false, "showPublished": true, "showDefault": false, "showAgeCols": true}</script>
+        <script>
+(() => {
+  const opts = JSON.parse(document.getElementById('findings-options').textContent);
+  const showTeam = !!opts.showTeam;
+  const showPublished = !!opts.showPublished;
+  const showDefault = !!opts.showDefault;
+  const showAgeCols = !!opts.showAgeCols;
+  const data = JSON.parse(document.getElementById('findings-data').textContent);
+  const PAGE_SIZE = 100;
+  let page = 0;
+
+  const $ = id => document.getElementById(id);
+  const tbody = document.querySelector('#findings-table tbody');
+
+  const escapeHtml = s => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  const fmtLinks = r => {
+    const parts = [];
+    if (r.studio_url) parts.push(`<a href="${escapeHtml(r.studio_url)}" target="_blank" rel="noopener">Studio</a>`);
+    if (r.cop_url) parts.push(`<a href="${escapeHtml(r.cop_url)}" target="_blank" rel="noopener">CoP</a>`);
+    parts.push(`<a href="#rule-${encodeURIComponent(r.rule_id)}">rule</a>`);
+    return parts.join(' &middot; ');
+  };
+
+  const fmtTriState = (v, yesLabel, noLabel) => {
+    if (v === true) return `<span class="pill pub-yes">${yesLabel}</span>`;
+    if (v === false) return `<span class="pill pub-no">${noLabel}</span>`;
+    return '<span class="muted">—</span>';
+  };
+
+  const fmtRow = r => {
+    const cells = [];
+    if (showTeam) cells.push(escapeHtml(r.team || 'unassigned'));
+    if (showPublished) cells.push(fmtTriState(r.is_published, 'yes', 'draft'));
+    if (showDefault) cells.push(fmtTriState(r.is_default_version, 'default', 'older'));
+    cells.push(escapeHtml(r.api_name));
+    cells.push(escapeHtml(r.api_version));
+    cells.push(`<code>${escapeHtml(r.rule_id)}</code><div class="cell-sub">${escapeHtml(r.rule_display)}</div>`);
+    cells.push(`<span class="pill sev-${escapeHtml(r.severity.toLowerCase())}">${escapeHtml(r.severity)}</span>`);
+    cells.push(escapeHtml(r.line));
+    cells.push(escapeHtml(r.message));
+    cells.push(fmtLinks(r));
+    if (showAgeCols) {
+      cells.push(escapeHtml((r.created_at || '').slice(0, 10) || '—'));
+      cells.push(escapeHtml((r.modified_at || '').slice(0, 10) || '—'));
+    }
+    return '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+  };
+
+  const matchPublished = (r, choice) => {
+    if (!choice) return true;
+    if (choice === 'yes') return r.is_published === true;
+    if (choice === 'no') return r.is_published === false;
+    if (choice === 'unknown') return r.is_published == null;
+    return true;
+  };
+
+  const filtered = () => {
+    const team = showTeam ? $('f-team').value : '';
+    const sev = $('f-severity').value;
+    const status = $('f-status').value;
+    const rule = $('f-rule').value;
+    const search = $('f-search').value.toLowerCase();
+    const pubChoice = showPublished ? $('f-published').value : '';
+    return data.filter(r =>
+      (!team || r.team === team) &&
+      (!sev || r.severity === sev) &&
+      (!status || r.status === status) &&
+      (!rule || r.rule_id === rule) &&
+      (!search || r.api_name.toLowerCase().includes(search)) &&
+      matchPublished(r, pubChoice)
+    );
+  };
+
+  const render = () => {
+    const rows = filtered();
+    const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    if (page >= totalPages) page = totalPages - 1;
+    if (page < 0) page = 0;
+    const slice = rows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+    tbody.innerHTML = slice.map(fmtRow).join('');
+    $('row-status').textContent =
+      `Showing ${slice.length} of ${rows.length} findings (total ${data.length}).`;
+    $('page-info').textContent = `Page ${page + 1} of ${totalPages}`;
+    $('prev').disabled = page === 0;
+    $('next').disabled = page >= totalPages - 1;
+  };
+
+  const downloadCsv = () => {
+    const rows = filtered();
+    const cols = showTeam
+      ? ['team','api_name','api_version','rule_id','rule_display','severity','line','message','studio_url','cop_url']
+      : ['api_name','api_version','rule_id','rule_display','severity','line','message','studio_url','cop_url','created_at','modified_at'];
+    const esc = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+    const body = [cols.join(',')].concat(rows.map(r => cols.map(c => esc(r[c])).join(','))).join('\n');
+    const blob = new Blob([body], {type: 'text/csv;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'findings-filtered.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  ['f-severity','f-status','f-rule','f-search'].forEach(id => {
+    const el = $(id);
+    if (el) el.addEventListener('input', () => { page = 0; render(); });
+  });
+  if (showTeam) $('f-team').addEventListener('input', () => { page = 0; render(); });
+  if (showPublished) $('f-published').addEventListener('input', () => { page = 0; render(); });
+  $('prev').addEventListener('click', () => { page--; render(); });
+  $('next').addEventListener('click', () => { page++; render(); });
+  $('dl-csv').addEventListener('click', downloadCsv);
+
+  render();
+})();
+</script>
+      </section>
+    
+
+      <section>
+        <h2>APIs grouped by rule violation</h2>
+        <p class="muted">Per-team grouping requires the ownership map. This per-rule cut serves
+        the same remediation workflow — each row is a CoP guidance unit and the list of APIs to fix.</p>
+        <table>
+          <thead><tr><th>Rule</th><th>Name</th><th>Severity</th><th>Findings</th><th>APIs failing</th><th>APIs</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><a href="#rule-operation-operationId"><code>operation-operationId</code></a></td>
+            <td>Operation operationId</td>
+            <td><span class="pill sev-critical">CRITICAL</span></td>
+            <td>3</td>
+            <td>1</td>
+            <td>sparklayerinc/scanner-bad-petstore/1.0.0</td>
+          </tr>
+        
+          <tr>
+            <td><a href="#rule-operation-summary"><code>operation-summary</code></a></td>
+            <td>Operation summary</td>
+            <td><span class="pill sev-warning">WARNING</span></td>
+            <td>3</td>
+            <td>1</td>
+            <td>sparklayerinc/scanner-bad-petstore/1.0.0</td>
+          </tr>
+        
+          <tr>
+            <td><a href="#rule-operation-tags"><code>operation-tags</code></a></td>
+            <td>Operation tags</td>
+            <td><span class="pill sev-warning">WARNING</span></td>
+            <td>3</td>
+            <td>1</td>
+            <td>sparklayerinc/scanner-bad-petstore/1.0.0</td>
+          </tr>
+        
+          <tr>
+            <td><a href="#rule-response-success-content"><code>response-success-content</code></a></td>
+            <td>Response success content</td>
+            <td><span class="pill sev-critical">CRITICAL</span></td>
+            <td>3</td>
+            <td>1</td>
+            <td>sparklayerinc/scanner-bad-petstore/1.0.0</td>
+          </tr>
+        
+          <tr>
+            <td><a href="#rule-response-description"><code>response-description</code></a></td>
+            <td>Response description</td>
+            <td><span class="pill sev-warning">WARNING</span></td>
+            <td>3</td>
+            <td>1</td>
+            <td>sparklayerinc/scanner-bad-petstore/1.0.0</td>
+          </tr>
+        
+          <tr>
+            <td><a href="#rule-info-contact"><code>info-contact</code></a></td>
+            <td>Info contact</td>
+            <td><span class="pill sev-critical">CRITICAL</span></td>
+            <td>1</td>
+            <td>1</td>
+            <td>sparklayerinc/scanner-bad-petstore/1.0.0</td>
+          </tr>
+        
+          <tr>
+            <td><a href="#rule-info-license"><code>info-license</code></a></td>
+            <td>Info license</td>
+            <td><span class="pill sev-critical">CRITICAL</span></td>
+            <td>1</td>
+            <td>1</td>
+            <td>sparklayerinc/scanner-bad-petstore/1.0.0</td>
+          </tr>
+        </tbody>
+        </table>
+      </section>
+    
+
+      <section>
+        <h2>Per-API summary</h2>
+        <details><summary>Expand all APIs (2)</summary>
+          <div class="api-grid">
+          <article class="api-card">
+            <header>
+              <strong>scanner-bad-petstore</strong> v1.0.0
+              <span class="pill status-fail">FAIL</span>
+              <span class="pill pub-no">draft</span>
+              
+              <span class="muted">crit 8 / warn 9</span>
+              <span class="muted">team: <span class="muted">unassigned</span></span>
+              <span class="muted">created 2026-05-28 · modified 2026-05-29</span>
+              <a href="https://app.swaggerhub.com/apis/sparklayerinc/scanner-bad-petstore/1.0.0" target="_blank" rel="noopener">open in Studio</a>
+            </header>
+            <p class="muted">scanned 2026-05-29 21:12 UTC</p>
+            <details><summary>17 finding(s)</summary><ul class="findings-list"><li><span class="pill sev-critical">CRITICAL</span> <code>info-contact</code> &mdash; info-contact -&gt; info.contact is required <span class="muted">(line 1)</span></li><li><span class="pill sev-critical">CRITICAL</span> <code>info-license</code> &mdash; info-license -&gt; info.license is required <span class="muted">(line 1)</span></li><li><span class="pill sev-critical">CRITICAL</span> <code>operation-operationId</code> &mdash; operation-operationId -&gt; Every operation must have an operationId <span class="muted">(line 16)</span></li><li><span class="pill sev-warning">WARNING</span> <code>operation-summary</code> &mdash; operation-summary -&gt; Every operation must have a summary <span class="muted">(line 16)</span></li><li><span class="pill sev-warning">WARNING</span> <code>operation-tags</code> &mdash; operation-tags -&gt; Every operation must have at least one tag <span class="muted">(line 16)</span></li><li><span class="pill sev-critical">CRITICAL</span> <code>response-success-content</code> &mdash; response-success-content -&gt; 2xx response must declare content <span class="muted">(line 18)</span></li><li><span class="pill sev-warning">WARNING</span> <code>response-description</code> &mdash; response-description -&gt; Response description must be present (&gt;= 5 chars) <span class="muted">(line 19)</span></li><li><span class="pill sev-critical">CRITICAL</span> <code>operation-operationId</code> &mdash; operation-operationId -&gt; Every operation must have an operationId <span class="muted">(line 20)</span></li><li><span class="pill sev-warning">WARNING</span> <code>operation-summary</code> &mdash; operation-summary -&gt; Every operation must have a summary <span class="muted">(line 20)</span></li><li><span class="pill sev-warning">WARNING</span> <code>operation-tags</code> &mdash; operation-tags -&gt; Every operation must have at least one tag <span class="muted">(line 20)</span></li><li><span class="pill sev-critical">CRITICAL</span> <code>response-success-content</code> &mdash; response-success-content -&gt; 2xx response must declare content <span class="muted">(line 22)</span></li><li><span class="pill sev-warning">WARNING</span> <code>response-description</code> &mdash; response-description -&gt; Response description must be present (&gt;= 5 chars) <span class="muted">(line 23)</span></li><li><span class="pill sev-critical">CRITICAL</span> <code>operation-operationId</code> &mdash; operation-operationId -&gt; Every operation must have an operationId <span class="muted">(line 25)</span></li><li><span class="pill sev-warning">WARNING</span> <code>operation-summary</code> &mdash; operation-summary -&gt; Every operation must have a summary <span class="muted">(line 25)</span></li><li><span class="pill sev-warning">WARNING</span> <code>operation-tags</code> &mdash; operation-tags -&gt; Every operation must have at least one tag <span class="muted">(line 25)</span></li><li><span class="pill sev-critical">CRITICAL</span> <code>response-success-content</code> &mdash; response-success-content -&gt; 2xx response must declare content <span class="muted">(line 33)</span></li><li><span class="pill sev-warning">WARNING</span> <code>response-description</code> &mdash; response-description -&gt; Response description must be present (&gt;= 5 chars) <span class="muted">(line 34)</span></li></ul></details>
+          </article>
+        
+          <article class="api-card">
+            <header>
+              <strong>scanner-good-petstore</strong> v1.0.0
+              <span class="pill status-pass">PASS</span>
+              <span class="pill pub-no">draft</span>
+              
+              <span class="muted">crit 0 / warn 0</span>
+              <span class="muted">team: <span class="muted">unassigned</span></span>
+              <span class="muted">created 2026-05-28 · modified 2026-05-29</span>
+              <a href="https://app.swaggerhub.com/apis/sparklayerinc/scanner-good-petstore/1.0.0" target="_blank" rel="noopener">open in Studio</a>
+            </header>
+            <p class="muted">scanned 2026-05-29 21:12 UTC</p>
+            <p class="muted">no findings</p>
+          </article>
+        </div>
+        </details>
+      </section>
+    
+
+      <section>
+        <h2>Unmapped APIs (all)</h2>
+        <p class="muted">The ownership map is not yet configured; until it is, every scanned API is listed here. Once configured, this section will show only APIs missing from the map.</p>
+        <table>
+          <thead><tr><th>Owner</th><th>API</th><th>Version</th><th>Status</th><th>Findings</th></tr></thead>
+          <tbody><tr><td>sparklayerinc</td><td>scanner-bad-petstore</td><td>1.0.0</td><td>FAIL</td><td>17</td></tr><tr><td>sparklayerinc</td><td>scanner-good-petstore</td><td>1.0.0</td><td>PASS</td><td>0</td></tr></tbody>
+        </table>
+      </section>
+    
+
+          <section>
+            <h2>Scan errors</h2>
+            <p class="muted">No APIs failed to scan in this run.</p>
+          </section>
+        
+
+      <footer>
+        <h2>Methodology and definitions</h2>
+        <p>Ruleset: ruleset version not recorded. Scan timestamp: 2026-05-29 21:12 UTC.</p>
+        <p><strong>Status:</strong>
+          PASS = no findings; WARN = warnings only (publishable); FAIL = at least one CRITICAL
+          finding (blocks publish); SCAN_ERROR = scanner could not evaluate the API.
+        </p>
+        <p><strong>Severity:</strong>
+          CRITICAL = governance violation that blocks publish; WARNING = quality gap that does
+          not block publish but indicates non-conformance.
+        </p>
+        <p>Ownership map: not yet configured. Team/domain/contact columns and the per-team summary are unavailable; the report falls back to a per-rule view and lists all APIs in the Unmapped section.</p>
+        <p class="muted">To request a rule exception or report a false positive, contact the platform team.</p>
+      </footer>
+    
+</body>
+</html>

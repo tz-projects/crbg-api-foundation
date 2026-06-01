@@ -50,8 +50,24 @@ projects/*/output/
 projects/*/reports/
 projects/*/*.local.*
 
+# --- Report generator Tier 2/3 inputs (may contain internal team data / CIO ask wording) ---
+# Track these in a private location, or `git add -f` if your copy is safe to commit.
+# `*.example.*` files alongside them stay tracked.
+projects/reports/ownership.yaml
+projects/reports/ownership.yml
+projects/reports/rule_display_names.yaml
+projects/reports/rule_display_names.yml
+projects/reports/cop_guidance.yaml
+projects/reports/cop_guidance.yml
+projects/reports/asks.md
+
 # --- Direnv ---
 .direnv/
 
 # --- Claude Code (per-machine local settings) ---
 .claude/settings.local.json
+
+# --- Captured HTTP transcripts (may contain session cookies / CSRF tokens) ---
+http-requests.md
+*.har
+*.har.sanitized

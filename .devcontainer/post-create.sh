@@ -9,19 +9,24 @@ set -euo pipefail
 
 log() { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; }
 
-log "Bootstrapping scanner sub-projects"
-SCANNER_DIR="projects/swagger-studio-scanner"
+log "Bootstrapping all sub-projects under projects/"
 
-if [ -f "${SCANNER_DIR}/python/pyproject.toml" ]; then
-  log "  -> Python: uv sync"
-  (cd "${SCANNER_DIR}/python" && uv sync --all-extras)
-  (cd "${SCANNER_DIR}/python" && direnv allow . || true)
-fi
+# Bootstrap every Python sub-project (any projects/<name>/python with pyproject.toml).
+for pyproject in projects/*/python/pyproject.toml; do
+  [ -f "${pyproject}" ] || continue
+  proj_dir="$(dirname "${pyproject}")"
+  log "  -> Python: uv sync in ${proj_dir}"
+  (cd "${proj_dir}" && uv sync --all-extras)
+  (cd "${proj_dir}" && direnv allow . || true)
+done
 
-if [ -f "${SCANNER_DIR}/typescript/package.json" ]; then
-  log "  -> TypeScript: pnpm install"
-  (cd "${SCANNER_DIR}/typescript" && pnpm install --frozen-lockfile=false)
-fi
+# Bootstrap every TypeScript sub-project (any projects/<name>/typescript with package.json).
+for pkg in projects/*/typescript/package.json; do
+  [ -f "${pkg}" ] || continue
+  proj_dir="$(dirname "${pkg}")"
+  log "  -> TypeScript: pnpm install in ${proj_dir}"
+  (cd "${proj_dir}" && pnpm install --frozen-lockfile=false)
+done
 
 log "Versions"
 {

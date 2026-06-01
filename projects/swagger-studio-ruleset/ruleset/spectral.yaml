@@ -1,0 +1,11 @@
+# API Foundation org standardization ruleset — entry point.
+#
+# Composes category files (typical hygiene rules grouped by what they govern)
+# plus any standalone single-rule files (high-stakes / per-rule visibility).
+# Add a new category by dropping a YAML in `rules/` and listing it here.
+
+extends:
+  - ./rules/info.yaml
+  - ./rules/operations.yaml
+  - ./rules/responses.yaml
+  - ./rules/security-no-api-key-in-url.yaml

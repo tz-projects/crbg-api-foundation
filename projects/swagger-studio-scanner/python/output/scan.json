@@ -1,0 +1,238 @@
+{
+  "generated_at": "2026-05-29T21:12:46.688403+00:00",
+  "ruleset": null,
+  "summary": {
+    "total_apis": 2,
+    "passed": 1,
+    "warned": 0,
+    "failed": 1,
+    "errored": 0,
+    "total_findings": 17,
+    "critical_findings": 8,
+    "warning_findings": 9
+  },
+  "rule_pareto": [
+    {
+      "rule": "operation-operationId",
+      "severity": "CRITICAL",
+      "count": 3,
+      "share_pct": 17.6,
+      "cumulative_pct": 17.6
+    },
+    {
+      "rule": "operation-summary",
+      "severity": "WARNING",
+      "count": 3,
+      "share_pct": 17.6,
+      "cumulative_pct": 35.3
+    },
+    {
+      "rule": "operation-tags",
+      "severity": "WARNING",
+      "count": 3,
+      "share_pct": 17.6,
+      "cumulative_pct": 52.9
+    },
+    {
+      "rule": "response-success-content",
+      "severity": "CRITICAL",
+      "count": 3,
+      "share_pct": 17.6,
+      "cumulative_pct": 70.6
+    },
+    {
+      "rule": "response-description",
+      "severity": "WARNING",
+      "count": 3,
+      "share_pct": 17.6,
+      "cumulative_pct": 88.2
+    },
+    {
+      "rule": "info-contact",
+      "severity": "CRITICAL",
+      "count": 1,
+      "share_pct": 5.9,
+      "cumulative_pct": 94.1
+    },
+    {
+      "rule": "info-license",
+      "severity": "CRITICAL",
+      "count": 1,
+      "share_pct": 5.9,
+      "cumulative_pct": 100.0
+    }
+  ],
+  "results": [
+    {
+      "api": {
+        "owner": "sparklayerinc",
+        "name": "scanner-bad-petstore",
+        "version": "1.0.0"
+      },
+      "status": "fail",
+      "findings": [
+        {
+          "rule": "info-contact",
+          "severity": "CRITICAL",
+          "description": "info-contact -> info.contact is required",
+          "message": "info.contact is required",
+          "line": 1,
+          "path": null
+        },
+        {
+          "rule": "info-license",
+          "severity": "CRITICAL",
+          "description": "info-license -> info.license is required",
+          "message": "info.license is required",
+          "line": 1,
+          "path": null
+        },
+        {
+          "rule": "operation-operationId",
+          "severity": "CRITICAL",
+          "description": "operation-operationId -> Every operation must have an operationId",
+          "message": "Every operation must have an operationId",
+          "line": 16,
+          "path": null
+        },
+        {
+          "rule": "operation-summary",
+          "severity": "WARNING",
+          "description": "operation-summary -> Every operation must have a summary",
+          "message": "Every operation must have a summary",
+          "line": 16,
+          "path": null
+        },
+        {
+          "rule": "operation-tags",
+          "severity": "WARNING",
+          "description": "operation-tags -> Every operation must have at least one tag",
+          "message": "Every operation must have at least one tag",
+          "line": 16,
+          "path": null
+        },
+        {
+          "rule": "response-success-content",
+          "severity": "CRITICAL",
+          "description": "response-success-content -> 2xx response must declare content",
+          "message": "2xx response must declare content",
+          "line": 18,
+          "path": null
+        },
+        {
+          "rule": "response-description",
+          "severity": "WARNING",
+          "description": "response-description -> Response description must be present (>= 5 chars)",
+          "message": "Response description must be present (>= 5 chars)",
+          "line": 19,
+          "path": null
+        },
+        {
+          "rule": "operation-operationId",
+          "severity": "CRITICAL",
+          "description": "operation-operationId -> Every operation must have an operationId",
+          "message": "Every operation must have an operationId",
+          "line": 20,
+          "path": null
+        },
+        {
+          "rule": "operation-summary",
+          "severity": "WARNING",
+          "description": "operation-summary -> Every operation must have a summary",
+          "message": "Every operation must have a summary",
+          "line": 20,
+          "path": null
+        },
+        {
+          "rule": "operation-tags",
+          "severity": "WARNING",
+          "description": "operation-tags -> Every operation must have at least one tag",
+          "message": "Every operation must have at least one tag",
+          "line": 20,
+          "path": null
+        },
+        {
+          "rule": "response-success-content",
+          "severity": "CRITICAL",
+          "description": "response-success-content -> 2xx response must declare content",
+          "message": "2xx response must declare content",
+          "line": 22,
+          "path": null
+        },
+        {
+          "rule": "response-description",
+          "severity": "WARNING",
+          "description": "response-description -> Response description must be present (>= 5 chars)",
+          "message": "Response description must be present (>= 5 chars)",
+          "line": 23,
+          "path": null
+        },
+        {
+          "rule": "operation-operationId",
+          "severity": "CRITICAL",
+          "description": "operation-operationId -> Every operation must have an operationId",
+          "message": "Every operation must have an operationId",
+          "line": 25,
+          "path": null
+        },
+        {
+          "rule": "operation-summary",
+          "severity": "WARNING",
+          "description": "operation-summary -> Every operation must have a summary",
+          "message": "Every operation must have a summary",
+          "line": 25,
+          "path": null
+        },
+        {
+          "rule": "operation-tags",
+          "severity": "WARNING",
+          "description": "operation-tags -> Every operation must have at least one tag",
+          "message": "Every operation must have at least one tag",
+          "line": 25,
+          "path": null
+        },
+        {
+          "rule": "response-success-content",
+          "severity": "CRITICAL",
+          "description": "response-success-content -> 2xx response must declare content",
+          "message": "2xx response must declare content",
+          "line": 33,
+          "path": null
+        },
+        {
+          "rule": "response-description",
+          "severity": "WARNING",
+          "description": "response-description -> Response description must be present (>= 5 chars)",
+          "message": "Response description must be present (>= 5 chars)",
+          "line": 34,
+          "path": null
+        }
+      ],
+      "error": null,
+      "scanned_at": "2026-05-29T21:12:46.934429Z",
+      "meta": {
+        "created_at": "2026-05-28T19:24:59Z",
+        "modified_at": "2026-05-29T01:49:02Z",
+        "is_default_version": null,
+        "is_published": false
+      }
+    },
+    {
+      "api": {
+        "owner": "sparklayerinc",
+        "name": "scanner-good-petstore",
+        "version": "1.0.0"
+      },
+      "status": "pass",
+      "findings": [],
+      "error": null,
+      "scanned_at": "2026-05-29T21:12:46.934708Z",
+      "meta": {
+        "created_at": "2026-05-28T19:24:58Z",
+        "modified_at": "2026-05-29T01:49:01Z",
+        "is_default_version": null,
+        "is_published": false
+      }
+    }
+  ]
+}
