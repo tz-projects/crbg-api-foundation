@@ -15,12 +15,20 @@ class Backend(StrEnum):
 
 @dataclass(frozen=True)
 class PublishResult:
-    """What a publisher returns on success — caller decides how to display it."""
+    """What a publisher returns on success — caller decides how to display it.
+
+    `ruleset_id` is the Studio-assigned UUID for the slot. The REST backend
+    reads it straight out of the upload response body (`{"id": "..."}`); the
+    CLI backend leaves it None because `swaggerhub spectral:upload` only
+    surfaces a human-formatted status line on stdout. When present, callers
+    can hand it to `activator.activate(...)` to skip the name->UUID lookup.
+    """
 
     ruleset_slug: str
     backend: Backend
     studio_url: str
     detail: str
+    ruleset_id: str | None = None
 
 
 class Publisher(Protocol):

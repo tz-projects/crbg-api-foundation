@@ -1,0 +1,12 @@
+# OWASP API Security Top 10 ruleset — entry point.
+#
+# Published to Studio under {owner}/owasp-top-10-active alongside the OAS
+# ruleset ({owner}/openapi-3-0-active). Studio merges findings from every
+# spectralRuleset whose `enabled` flag is true, so both guides run on every
+# spec scan once both are activated.
+#
+# One rule for now — API2:2023 Broken Authentication. Extend by dropping a
+# new YAML in `rules/` and listing it here.
+
+extends:
+  - ./rules/owasp-api2-operation-security-defined.yaml

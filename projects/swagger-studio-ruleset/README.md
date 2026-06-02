@@ -8,16 +8,32 @@ The split mirrors the context document §5 architecture: rules authored in Git, 
 
 ```
 swagger-studio-ruleset/
-├── ruleset/                # The Spectral ruleset — uploaded to Studio
+├── ruleset/                # OAS 3.0 hygiene guide — slot: openapi-3-0-active
 │   ├── spectral.yaml       # Entry point: extends every category + standalone
 │   └── rules/
 │       ├── info.yaml                       # Category: info block (contact, license, ...)
 │       ├── operations.yaml                 # Category: per-operation hygiene
 │       ├── responses.yaml                  # Category: response standards
 │       └── security-no-api-key-in-url.yaml # Standalone: high-stakes security
+├── ruleset-owasp/          # OWASP Top 10 guide — slot: owasp-top-10-active
+│   ├── spectral.yaml
+│   └── rules/
+│       └── owasp-api2-operation-security-defined.yaml  # API2:2023 Broken Authentication
 ├── python/                 # Publisher tool (Python)
 └── typescript/             # Publisher tool (TypeScript)
 ```
+
+## Multiple active style guides
+
+Studio's `/standardization/{owner}/config` stores `spectralRulesets[]` as an array
+where each entry has its own `enabled` flag. Activating one ruleset leaves any
+others untouched, so multiple guides can be active simultaneously — Studio's
+engine merges findings from every enabled entry. This repo publishes two guides:
+
+| Slot | Source | Scope |
+|---|---|---|
+| `openapi-3-0-active` | `ruleset/` | General OAS 3.0 hygiene (info, operations, responses, key-in-URL) |
+| `owasp-top-10-active` | `ruleset-owasp/` | OWASP API Security Top 10 (currently API2:2023 only) |
 
 ## Modularization — "hybrid"
 
@@ -33,33 +49,57 @@ The two patterns coexist freely — `spectral.yaml` just `extends` everything in
 
 ## Publisher
 
-Two implementations, both behind the same CLI surface (`ruleset-publisher publish`):
+Two implementations, both behind the same CLI surface:
 
 - **Python** (`python/`) — uv, typer
 - **TypeScript** (`typescript/`) — pnpm, commander
 
-Each publisher supports two backends:
+### Commands
+
+| Command | What it does | Endpoints |
+|---|---|---|
+| `publish` | Upload + activate a guide. Creates a slot if missing, updates if present. | `PUT .../zip` then activator flow |
+| `deactivate` | Set `enabled=false` for a slot in the org config. Content stays in Studio. | `GET`/`POST .../config` |
+| `delete` | Remove the slot entirely: clean its config entry then DELETE the ruleset. Idempotent (404 → "already absent"). | `DELETE .../{name}` |
+| `list` | Show every ruleset in the org with its enabled state, merged from `/spectral-rulesets/{owner}` + `/config`. | Two GETs |
+| `pull` | Download a slot's current zip into a directory. Used for drift detection / bootstrapping. | `GET .../zip` |
+
+`publish` and `deactivate` accept `--name` to target the slot; `--ruleset` (publish only) points at the source dir.
+
+### Backends (publish only)
 
 | Backend | How | When to use |
 |---|---|---|
 | `cli` (default) | Shells out to `swaggerhub spectral:upload` | Reliable, mirrors documented mechanism. Requires swaggerhub-cli installed. |
 | `rest` | Direct HTTPS POST to the SwaggerHub Standardization API | Self-contained, scriptable in environments without swaggerhub-cli. Endpoint shape verified against current docs in the source. |
 
-Both backends upload to the fixed-name slot `${OWNER}/openapi-3-0-active`, the slot Studio scans against per context doc §3.
+Both backends upload to `${OWNER}/${--name}`. `--name` defaults to `openapi-3-0-active` (the OAS hygiene slot per context doc §3); pass `--name owasp-top-10-active` with `--ruleset ../ruleset-owasp` to publish the second guide.
 
 ## Quick start
 
 ```bash
-# Python
+# Python — full lifecycle
 cd projects/swagger-studio-ruleset/python
-uv run ruleset-publisher publish               # backend defaults to `cli`
-uv run ruleset-publisher publish --backend rest
+uv run ruleset-publisher publish                                              # OAS (default)
+uv run ruleset-publisher publish --ruleset ../ruleset-owasp --name owasp-top-10-active
+uv run ruleset-publisher list                                                 # show enabled state
+uv run ruleset-publisher pull --name owasp-top-10-active --dest /tmp/check   # download for diff
+uv run ruleset-publisher deactivate --name owasp-top-10-active               # turn off, keep content
+uv run ruleset-publisher delete --name owasp-top-10-active --yes             # remove entirely
 
-# TypeScript
+# TypeScript — same surface, same flags
 cd projects/swagger-studio-ruleset/typescript
 pnpm dev publish
-pnpm dev publish --backend rest
+pnpm dev publish --ruleset ../ruleset-owasp --name owasp-top-10-active
+pnpm dev list
+pnpm dev pull --name owasp-top-10-active --dest /tmp/check
+pnpm dev deactivate --name owasp-top-10-active
+pnpm dev delete --name owasp-top-10-active --yes
 ```
+
+After both publishes, the two guides are both `enabled=true` in the org's
+standardization config. The next spec scan will report findings from both —
+e.g. `bad-petstore.yaml` fails OAS hygiene rules AND the OWASP API2 rule.
 
 Both read `projects/swagger-studio-scanner/.env` for credentials — same `.env` the scanner uses.
 

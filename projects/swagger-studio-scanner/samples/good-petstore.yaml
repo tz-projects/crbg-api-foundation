@@ -26,6 +26,8 @@ paths:
       summary: List all pets
       description: Returns a paginated list of pets in the store.
       tags: [pets]
+      security:
+        - bearerAuth: []
       parameters:
         - name: limit
           in: query
@@ -67,6 +69,8 @@ paths:
       summary: Create a new pet
       description: Adds a new pet to the store.
       tags: [pets]
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         description: The pet to create.
@@ -93,6 +97,8 @@ paths:
       summary: Get a pet by ID
       description: Returns a single pet identified by its numeric ID.
       tags: [pets]
+      security:
+        - bearerAuth: []
       parameters:
         - name: petId
           in: path
@@ -116,6 +122,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: OAuth2/JWT bearer token. Satisfies OWASP API2:2023 Broken Authentication.
   schemas:
     Pet:
       type: object

@@ -2,16 +2,19 @@ openapi: 3.0.3
 info:
   title: bad
   version: 1.0.0
-# Intentionally bad spec for scanner validation. Missing many things the
-# built-in SwaggerHub OAS 3.0 standardization ruleset will flag:
-#   - no info.description
-#   - no info.contact
-#   - no info.license
-#   - no servers
-#   - no tags definition
+# Intentionally bad spec for scanner validation. Fails rules in BOTH active
+# style guides:
+#
+# OAS 3.0 ruleset (openapi-3-0-active):
+#   - no info.description / info.contact / info.license
+#   - no servers / no tags definition
 #   - operations have no operationId, summary, description, or tags
 #   - response has no schema and a non-descriptive description
 #   - schema referenced but not defined under components
+#
+# OWASP Top 10 ruleset (owasp-top-10-active):
+#   - operations declare no `security` requirement
+#     -> OWASP API2:2023 Broken Authentication
 paths:
   /things:
     get:

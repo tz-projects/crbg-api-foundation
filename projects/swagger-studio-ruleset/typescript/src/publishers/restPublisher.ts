@@ -59,11 +59,33 @@ export class RestPublisher implements Publisher {
         throw new Error(`SwaggerHub returned HTTP ${String(response.status)}: ${body.trim()}`);
       }
 
+      // Upload response: `{"id": "<uuid>"}`. Capture so the activator can
+      // skip its lookup-and-retry round-trip. Tolerate a missing/non-JSON
+      // body — the activator falls back to lookup-by-name.
+      let rulesetId: string | undefined;
+      try {
+        const body: unknown = await response.json();
+        if (
+          typeof body === "object" &&
+          body !== null &&
+          "id" in body &&
+          typeof (body as { id: unknown }).id === "string" &&
+          (body as { id: string }).id.length > 0
+        ) {
+          rulesetId = (body as { id: string }).id;
+        }
+      } catch {
+        // Non-JSON body — leave rulesetId undefined; activator will look up.
+      }
+
+      // Spread the optional id only when present — `exactOptionalPropertyTypes`
+      // forbids explicit `undefined` on an optional field.
       return {
         rulesetSlug,
         backend: Backend.Rest,
         studioUrl: `https://app.swaggerhub.com/standardization/${owner}/${name}`,
         detail: `HTTP ${String(response.status)}`,
+        ...(rulesetId !== undefined ? { rulesetId } : {}),
       };
     } finally {
       packager.cleanup(bundle);

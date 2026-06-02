@@ -1,0 +1,23 @@
+# OWASP API Security Top 10 — API2:2023 Broken Authentication.
+#
+# Every operation must declare a non-empty `security` requirement. Without
+# one, the operation accepts unauthenticated traffic, which is the textbook
+# Broken Authentication failure mode. `schema` (not `truthy`) is used because
+# JS treats `[]` as truthy — we need to fail empty arrays AND missing fields.
+
+rules:
+  owasp-api2-operation-security-defined:
+    description: >
+      OWASP API Security Top 10 — API2:2023 Broken Authentication. Every
+      operation must declare a non-empty `security` requirement so the
+      endpoint cannot be invoked anonymously.
+    message: "Operation must declare a non-empty `security` requirement (OWASP API2:2023)"
+    severity: error
+    given: "$.paths[*][get,put,post,delete,options,head,patch,trace]"
+    then:
+      field: security
+      function: schema
+      functionOptions:
+        schema:
+          type: array
+          minItems: 1

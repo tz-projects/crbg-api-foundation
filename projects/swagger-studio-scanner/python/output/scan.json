@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-29T21:12:46.688403+00:00",
+  "generated_at": "2026-06-02T11:56:21.443664+00:00",
   "ruleset": null,
   "summary": {
     "total_apis": 2,
@@ -7,8 +7,8 @@
     "warned": 0,
     "failed": 1,
     "errored": 0,
-    "total_findings": 17,
-    "critical_findings": 8,
+    "total_findings": 20,
+    "critical_findings": 11,
     "warning_findings": 9
   },
   "rule_pareto": [
@@ -16,49 +16,56 @@
       "rule": "operation-operationId",
       "severity": "CRITICAL",
       "count": 3,
-      "share_pct": 17.6,
-      "cumulative_pct": 17.6
+      "share_pct": 15.0,
+      "cumulative_pct": 15.0
     },
     {
       "rule": "operation-summary",
       "severity": "WARNING",
       "count": 3,
-      "share_pct": 17.6,
-      "cumulative_pct": 35.3
+      "share_pct": 15.0,
+      "cumulative_pct": 30.0
     },
     {
       "rule": "operation-tags",
       "severity": "WARNING",
       "count": 3,
-      "share_pct": 17.6,
-      "cumulative_pct": 52.9
+      "share_pct": 15.0,
+      "cumulative_pct": 45.0
+    },
+    {
+      "rule": "owasp-api2-operation-security-defined",
+      "severity": "CRITICAL",
+      "count": 3,
+      "share_pct": 15.0,
+      "cumulative_pct": 60.0
     },
     {
       "rule": "response-success-content",
       "severity": "CRITICAL",
       "count": 3,
-      "share_pct": 17.6,
-      "cumulative_pct": 70.6
+      "share_pct": 15.0,
+      "cumulative_pct": 75.0
     },
     {
       "rule": "response-description",
       "severity": "WARNING",
       "count": 3,
-      "share_pct": 17.6,
-      "cumulative_pct": 88.2
+      "share_pct": 15.0,
+      "cumulative_pct": 90.0
     },
     {
       "rule": "info-contact",
       "severity": "CRITICAL",
       "count": 1,
-      "share_pct": 5.9,
-      "cumulative_pct": 94.1
+      "share_pct": 5.0,
+      "cumulative_pct": 95.0
     },
     {
       "rule": "info-license",
       "severity": "CRITICAL",
       "count": 1,
-      "share_pct": 5.9,
+      "share_pct": 5.0,
       "cumulative_pct": 100.0
     }
   ],
@@ -92,55 +99,15 @@
           "severity": "CRITICAL",
           "description": "operation-operationId -> Every operation must have an operationId",
           "message": "Every operation must have an operationId",
-          "line": 16,
-          "path": null
-        },
-        {
-          "rule": "operation-summary",
-          "severity": "WARNING",
-          "description": "operation-summary -> Every operation must have a summary",
-          "message": "Every operation must have a summary",
-          "line": 16,
-          "path": null
-        },
-        {
-          "rule": "operation-tags",
-          "severity": "WARNING",
-          "description": "operation-tags -> Every operation must have at least one tag",
-          "message": "Every operation must have at least one tag",
-          "line": 16,
-          "path": null
-        },
-        {
-          "rule": "response-success-content",
-          "severity": "CRITICAL",
-          "description": "response-success-content -> 2xx response must declare content",
-          "message": "2xx response must declare content",
-          "line": 18,
-          "path": null
-        },
-        {
-          "rule": "response-description",
-          "severity": "WARNING",
-          "description": "response-description -> Response description must be present (>= 5 chars)",
-          "message": "Response description must be present (>= 5 chars)",
           "line": 19,
           "path": null
         },
         {
-          "rule": "operation-operationId",
-          "severity": "CRITICAL",
-          "description": "operation-operationId -> Every operation must have an operationId",
-          "message": "Every operation must have an operationId",
-          "line": 20,
-          "path": null
-        },
-        {
           "rule": "operation-summary",
           "severity": "WARNING",
           "description": "operation-summary -> Every operation must have a summary",
           "message": "Every operation must have a summary",
-          "line": 20,
+          "line": 19,
           "path": null
         },
         {
@@ -148,7 +115,15 @@
           "severity": "WARNING",
           "description": "operation-tags -> Every operation must have at least one tag",
           "message": "Every operation must have at least one tag",
-          "line": 20,
+          "line": 19,
+          "path": null
+        },
+        {
+          "rule": "owasp-api2-operation-security-defined",
+          "severity": "CRITICAL",
+          "description": "owasp-api2-operation-security-defined -> Operation must declare a non-empty `security` requirement (OWASP API2:2023)",
+          "message": "Operation must declare a non-empty `security` requirement (OWASP API2:2023)",
+          "line": 19,
           "path": null
         },
         {
@@ -156,23 +131,23 @@
           "severity": "CRITICAL",
           "description": "response-success-content -> 2xx response must declare content",
           "message": "2xx response must declare content",
+          "line": 21,
+          "path": null
+        },
+        {
+          "rule": "response-description",
+          "severity": "WARNING",
+          "description": "response-description -> Response description must be present (>= 5 chars)",
+          "message": "Response description must be present (>= 5 chars)",
           "line": 22,
           "path": null
         },
         {
-          "rule": "response-description",
-          "severity": "WARNING",
-          "description": "response-description -> Response description must be present (>= 5 chars)",
-          "message": "Response description must be present (>= 5 chars)",
-          "line": 23,
-          "path": null
-        },
-        {
           "rule": "operation-operationId",
           "severity": "CRITICAL",
           "description": "operation-operationId -> Every operation must have an operationId",
           "message": "Every operation must have an operationId",
-          "line": 25,
+          "line": 23,
           "path": null
         },
         {
@@ -180,7 +155,7 @@
           "severity": "WARNING",
           "description": "operation-summary -> Every operation must have a summary",
           "message": "Every operation must have a summary",
-          "line": 25,
+          "line": 23,
           "path": null
         },
         {
@@ -188,7 +163,15 @@
           "severity": "WARNING",
           "description": "operation-tags -> Every operation must have at least one tag",
           "message": "Every operation must have at least one tag",
-          "line": 25,
+          "line": 23,
+          "path": null
+        },
+        {
+          "rule": "owasp-api2-operation-security-defined",
+          "severity": "CRITICAL",
+          "description": "owasp-api2-operation-security-defined -> Operation must declare a non-empty `security` requirement (OWASP API2:2023)",
+          "message": "Operation must declare a non-empty `security` requirement (OWASP API2:2023)",
+          "line": 23,
           "path": null
         },
         {
@@ -196,7 +179,7 @@
           "severity": "CRITICAL",
           "description": "response-success-content -> 2xx response must declare content",
           "message": "2xx response must declare content",
-          "line": 33,
+          "line": 25,
           "path": null
         },
         {
@@ -204,15 +187,63 @@
           "severity": "WARNING",
           "description": "response-description -> Response description must be present (>= 5 chars)",
           "message": "Response description must be present (>= 5 chars)",
-          "line": 34,
+          "line": 26,
+          "path": null
+        },
+        {
+          "rule": "operation-operationId",
+          "severity": "CRITICAL",
+          "description": "operation-operationId -> Every operation must have an operationId",
+          "message": "Every operation must have an operationId",
+          "line": 28,
+          "path": null
+        },
+        {
+          "rule": "operation-summary",
+          "severity": "WARNING",
+          "description": "operation-summary -> Every operation must have a summary",
+          "message": "Every operation must have a summary",
+          "line": 28,
+          "path": null
+        },
+        {
+          "rule": "operation-tags",
+          "severity": "WARNING",
+          "description": "operation-tags -> Every operation must have at least one tag",
+          "message": "Every operation must have at least one tag",
+          "line": 28,
+          "path": null
+        },
+        {
+          "rule": "owasp-api2-operation-security-defined",
+          "severity": "CRITICAL",
+          "description": "owasp-api2-operation-security-defined -> Operation must declare a non-empty `security` requirement (OWASP API2:2023)",
+          "message": "Operation must declare a non-empty `security` requirement (OWASP API2:2023)",
+          "line": 28,
+          "path": null
+        },
+        {
+          "rule": "response-success-content",
+          "severity": "CRITICAL",
+          "description": "response-success-content -> 2xx response must declare content",
+          "message": "2xx response must declare content",
+          "line": 36,
+          "path": null
+        },
+        {
+          "rule": "response-description",
+          "severity": "WARNING",
+          "description": "response-description -> Response description must be present (>= 5 chars)",
+          "message": "Response description must be present (>= 5 chars)",
+          "line": 37,
           "path": null
         }
       ],
       "error": null,
-      "scanned_at": "2026-05-29T21:12:46.934429Z",
+      "scanned_at": "2026-06-02T11:56:21.682628Z",
       "meta": {
         "created_at": "2026-05-28T19:24:59Z",
-        "modified_at": "2026-05-29T01:49:02Z",
+        "modified_at": "2026-06-02T11:56:05Z",
         "is_default_version": null,
         "is_published": false
       }
@@ -226,10 +257,10 @@
       "status": "pass",
       "findings": [],
       "error": null,
-      "scanned_at": "2026-05-29T21:12:46.934708Z",
+      "scanned_at": "2026-06-02T11:56:21.682881Z",
       "meta": {
         "created_at": "2026-05-28T19:24:58Z",
-        "modified_at": "2026-05-29T01:49:01Z",
+        "modified_at": "2026-06-02T11:56:04Z",
         "is_default_version": null,
         "is_published": false
       }

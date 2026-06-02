@@ -13,6 +13,14 @@ export interface PublishResult {
   readonly backend: Backend;
   readonly studioUrl: string;
   readonly detail: string;
+  /**
+   * Studio-assigned UUID for the slot. The REST backend reads it from the
+   * upload response body (`{"id": "..."}`); the CLI backend leaves it
+   * undefined because `swaggerhub spectral:upload` only emits a
+   * human-formatted status line. When present, callers can pass it to
+   * `activate(...)` to skip the name->UUID lookup.
+   */
+  readonly rulesetId?: string;
 }
 
 export interface Publisher {

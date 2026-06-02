@@ -57,11 +57,24 @@ class RestPublisher:
         finally:
             packager.cleanup(bundle)
 
+        # The upload endpoint returns `{"id": "<uuid>"}`. Capture it so the
+        # activator can skip the lookup-and-retry round-trip. Tolerate a
+        # missing/non-JSON body — the activator will fall back to lookup.
+        ruleset_id: str | None = None
+        try:
+            body = response.json()
+            candidate = body.get("id") if isinstance(body, dict) else None
+            if isinstance(candidate, str) and candidate:
+                ruleset_id = candidate
+        except ValueError:
+            pass
+
         return PublishResult(
             ruleset_slug=ruleset_slug,
             backend=Backend.REST,
             studio_url=f"https://app.swaggerhub.com/standardization/{owner}/{name}",
             detail=f"HTTP {response.status_code}",
+            ruleset_id=ruleset_id,
         )
 
     def _client(self) -> httpx.AsyncClient:
