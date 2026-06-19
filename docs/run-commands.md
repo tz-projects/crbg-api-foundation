@@ -25,6 +25,10 @@ For the toolchain install (Python 3.12+, venv, pip), see [installation.md](insta
 
 Each program lives in its own folder with its own virtual environment. The `.env` is **shared** across scanner and publisher and lives at `projects/swagger-studio-scanner/.env`.
 
+> **Shell note:** Every command in this doc is shown in two variants where they differ — **bash** (macOS / Linux / WSL / Git Bash on Windows) and **Windows PowerShell**. The Python invocations themselves (`scanner probe`, `python generate_report.py ...`) are identical across both — only activation, env-var syntax, path separators, and loop syntax change. Pick whichever block matches your terminal.
+
+**bash (macOS / Linux):**
+
 ```bash
 # Credentials (once per machine)
 cp projects/swagger-studio-scanner/.env.example projects/swagger-studio-scanner/.env
@@ -33,8 +37,7 @@ cp projects/swagger-studio-scanner/.env.example projects/swagger-studio-scanner/
 # Scanner venv
 cd projects/swagger-studio-scanner/python
 python -m venv .venv
-source .venv/bin/activate                # macOS/Linux
-# .venv\Scripts\Activate.ps1             # Windows PowerShell
+source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 pip install -e . --no-deps
@@ -55,6 +58,43 @@ cd -
 pip install --user pyyaml                # only for nested YAML ownership maps
 ```
 
+**Windows PowerShell:**
+
+```powershell
+# Credentials (once per machine)
+Copy-Item projects\swagger-studio-scanner\.env.example projects\swagger-studio-scanner\.env
+# Edit .env -> set SWAGGERHUB_API_KEY (org-owner read) and SWAGGERHUB_ORG (slug)
+
+# Scanner venv
+Push-Location projects\swagger-studio-scanner\python
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+pip install -e . --no-deps
+deactivate
+Pop-Location
+
+# Publisher venv (separate from the scanner's)
+Push-Location projects\swagger-studio-ruleset\python
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+pip install -e . --no-deps
+deactivate
+Pop-Location
+
+# Reports — no venv needed (stdlib only). Optionally:
+pip install --user pyyaml                # only for nested YAML ownership maps
+```
+
+> **PowerShell execution-policy note:** if `.\.venv\Scripts\Activate.ps1` fails with *"cannot be loaded because running scripts is disabled on this system,"* run this once per user:
+> ```powershell
+> Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+> ```
+> Doesn't need admin; allows local scripts (like `Activate.ps1`) to run while still blocking unsigned remote scripts.
+
 The shared `.env` accepts these keys (defaults in parentheses are fine to omit):
 
 | Variable | Used by | Purpose |
@@ -68,11 +108,13 @@ The shared `.env` accepts these keys (defaults in parentheses are fine to omit):
 | `PUBLISHER_REQUEST_TIMEOUT_S` (`30`) | publisher | Per-request timeout |
 | `PUBLISHER_LOG_LEVEL` (`INFO`) | publisher | Log verbosity |
 
-**All commands below assume the relevant venv is activated** (`source .venv/bin/activate`). If you'd rather not activate, swap `scanner ...` for `.venv/bin/scanner ...` and likewise for `ruleset-publisher`.
+**All commands below assume the relevant venv is activated.** Activation is `source .venv/bin/activate` on bash, `.\.venv\Scripts\Activate.ps1` on PowerShell. If you'd rather not activate, swap `scanner ...` for `.venv/bin/scanner ...` (bash) or `.venv\Scripts\scanner.exe ...` (PowerShell), and likewise for `ruleset-publisher`.
 
 ### Verify the install (read-only — safe to run anytime)
 
 Once both venvs are set up and `.env` has your credentials, run these three quick checks. They prove the venv-installed CLIs can reach SwaggerHub end-to-end. All three are **read-only** — no writes, no scans of all 600 APIs, no risk to your org.
+
+**bash:**
 
 ```bash
 # 1. Scanner can talk to your org (auth + reachability)
@@ -99,15 +141,51 @@ python generate_platform_report.py --help
 cd -
 ```
 
+**Windows PowerShell:**
+
+```powershell
+# 1. Scanner can talk to your org (auth + reachability)
+Push-Location projects\swagger-studio-scanner\python
+.\.venv\Scripts\Activate.ps1
+scanner probe
+# Expect: ok: Auth + org reachable; verify standardization next.
+deactivate
+Pop-Location
+
+# 2. Publisher can talk to your org (lists rulesets — no changes)
+Push-Location projects\swagger-studio-ruleset\python
+.\.venv\Scripts\Activate.ps1
+ruleset-publisher list
+# Expect: a table of rulesets in your org with their enabled state
+deactivate
+Pop-Location
+
+# 3. Reports can read a scan.json (only meaningful if you've already run scanner scan)
+Push-Location projects\reports
+python generate_executive_report.py --help
+python generate_platform_report.py --help
+# Expect: usage info printed for both — confirms stdlib-only run works
+Pop-Location
+```
+
 If all three succeed, the work-laptop install is fully verified. If `scanner probe` returns `auth_failed` / `org_unreachable` / `network_error`, see [installation.md §5 corporate-laptop gotchas](installation.md#5-corporate-laptop-gotchas).
+
+> **Corporate-laptop SSL gotcha:** On a work laptop behind corporate TLS inspection, `scanner probe` will return `network_error: ... SSL: CERTIFICATE_VERIFY_FAILED` on the first run. The fix is to point Python at your corporate CA bundle via `SSL_CERT_FILE` + `REQUESTS_CA_BUNDLE` user env vars — see [installation.md §5.2](installation.md#52-ssl-inspection--corporate-ca) for the full export-and-set procedure.
 
 ---
 
 ## 1. Scanner
 
+**bash:**
 ```bash
 cd projects/swagger-studio-scanner/python
 source .venv/bin/activate
+```
+
+**Windows PowerShell:**
+```powershell
+cd projects\swagger-studio-scanner\python
+.\.venv\Scripts\Activate.ps1
 ```
 
 The scanner has **three commands**. It only has a REST backend — there is no `--backend` flag.
@@ -170,10 +248,20 @@ scanner scan -n 25
 # Combined: subset scan with custom output directory
 scanner scan -n 25 -o /tmp/dev-scan
 
-# Performance ramp-up — measure how the scan scales as N grows
+# Performance ramp-up — measure how the scan scales as N grows (bash)
 for N in 10 25 50 100 200; do
     time scanner scan -n $N -o /tmp/scan-$N
 done
+```
+
+**Windows PowerShell equivalent of the ramp-up loop:**
+
+```powershell
+foreach ($N in 10, 25, 50, 100, 200) {
+    Write-Host "=== Scanning first $N APIs ==="
+    Measure-Command { scanner scan -n $N -o "$env:TEMP\scan-$N" } |
+        Select-Object TotalSeconds
+}
 ```
 
 Exit codes: `0` on success, `2` when the org has no APIs (probably a slug typo), `1` on transport/parse error.
@@ -199,8 +287,9 @@ The scanner exposes three knobs as environment variables. **You don't need to to
 
 **Two ways to set them:**
 
-1. **Inline, for a single run** — prefix the env var directly on the command. Only affects that one invocation.
+1. **Inline, for a single run.** Only affects that one invocation. Syntax differs between shells:
 
+   **bash** — prefix the env var directly on the command:
    ```bash
    SCANNER_CONCURRENCY=4 scanner scan -n 200
    SCANNER_REQUEST_TIMEOUT_S=60 scanner scan -n 200
@@ -210,7 +299,27 @@ The scanner exposes three knobs as environment variables. **You don't need to to
    SCANNER_CONCURRENCY=4 SCANNER_REQUEST_TIMEOUT_S=60 scanner scan
    ```
 
-2. **Persistently, for every run** — edit `projects/swagger-studio-scanner/.env` (same file that holds your API key). Uncomment / set the line and it applies to every future `scanner` invocation until you change it again.
+   **Windows PowerShell** — set `$env:` vars on a line before the command (PowerShell doesn't support bash-style inline prefixes). They stay set for the rest of the terminal session unless you clear them:
+   ```powershell
+   $env:SCANNER_CONCURRENCY = 4
+   scanner scan -n 200
+
+   $env:SCANNER_REQUEST_TIMEOUT_S = 60
+   scanner scan -n 200
+
+   $env:SCANNER_LOG_LEVEL = "DEBUG"
+   scanner scan -n 50
+
+   # Combine multiple
+   $env:SCANNER_CONCURRENCY = 4
+   $env:SCANNER_REQUEST_TIMEOUT_S = 60
+   scanner scan
+
+   # Clear a one-off when done
+   Remove-Item Env:\SCANNER_CONCURRENCY
+   ```
+
+2. **Persistently, for every run** — edit `projects/swagger-studio-scanner/.env` (same file that holds your API key). Uncomment / set the line and it applies to every future `scanner` invocation until you change it again. Same `.env` format on every OS:
 
    ```
    # In projects/swagger-studio-scanner/.env
@@ -223,13 +332,22 @@ The scanner exposes three knobs as environment variables. **You don't need to to
 
    The inline form **wins over** the `.env` value when both are set, so a one-off override is always possible without editing the file.
 
+> **Note about non-scanner env vars (like `SSL_CERT_FILE`):** the `.env` file is only honored for variables declared in the scanner's `Settings` class. Generic Python env vars (`SSL_CERT_FILE`, `REQUESTS_CA_BUNDLE`, `HTTPS_PROXY`) must be set at the **shell or OS level** — they won't take effect from `.env`. See [installation.md §5](installation.md#5-corporate-laptop-gotchas).
+
 ---
 
 ## 2. Publisher
 
+**bash:**
 ```bash
 cd projects/swagger-studio-ruleset/python
 source .venv/bin/activate
+```
+
+**Windows PowerShell:**
+```powershell
+cd projects\swagger-studio-ruleset\python
+.\.venv\Scripts\Activate.ps1
 ```
 
 The publisher has **six commands**. The `publish` command supports two **backends** — pick one with `--backend`:
@@ -346,10 +464,21 @@ Exit code `3` if the slot doesn't exist in Studio.
 
 Run from `projects/reports/`. **No venv, no install** — pure stdlib Python. Both scripts take the scanner's `scan.json` as input.
 
+**bash:**
 ```bash
 cd projects/reports
 SCAN=../swagger-studio-scanner/python/output/scan.json
 ```
+
+**Windows PowerShell:**
+```powershell
+cd projects\reports
+$SCAN = "..\swagger-studio-scanner\python\output\scan.json"
+```
+
+In the examples below, the bash blocks use `"$SCAN"` and the PowerShell equivalent is `$SCAN` (no quotes needed unless the path contains spaces, in which case use `"$SCAN"`). Forward-slash paths inside Python args work on Windows too — Python normalizes them — so you can usually copy the bash examples verbatim into PowerShell as long as you've set `$SCAN` first.
+
+> **Line continuations:** the multi-line `python generate_*.py \` blocks use **bash backslash** continuations. In **PowerShell**, the equivalent is a **backtick** at end of line: `` ` ``. Or — easier — just remove the continuations and write the whole command on one line. Both work.
 
 ### 3.1 `generate_executive_report.py`
 
@@ -485,6 +614,8 @@ operation-operationId: https://confluence.acme.example.com/cop/rules/operation-o
 
 Drives publish → seed → scan → report in one go, from the repo root, on the work laptop (no `uv`, no Docker). All three venvs must already be set up per §0.
 
+**bash:**
+
 ```bash
 ROOT=$(pwd)
 SCANNER=projects/swagger-studio-scanner/python
@@ -526,6 +657,71 @@ echo "  $ROOT/$REPORTS/output/executive-report.html (CIO-facing)"
 echo "  $ROOT/$REPORTS/output/platform-report/index.html (platform team)"
 ```
 
+**Windows PowerShell:**
+
+PowerShell doesn't have bash-style subshells `(cmd1 && cmd2)`. Instead, use `Push-Location` / `Pop-Location` to enter/leave each project folder while keeping a single shell session. Each venv must be deactivated before activating the next one.
+
+```powershell
+$ROOT      = (Get-Location).Path
+$SCANNER   = "projects\swagger-studio-scanner\python"
+$PUBLISHER = "projects\swagger-studio-ruleset\python"
+$REPORTS   = "projects\reports"
+
+# (Step 0) Confirm credentials work
+Push-Location $SCANNER
+.\.venv\Scripts\Activate.ps1
+scanner probe
+deactivate
+Pop-Location
+
+# (Step 1) Publish the ruleset over REST (no Node CLI required)
+Push-Location $PUBLISHER
+.\.venv\Scripts\Activate.ps1
+ruleset-publisher publish --backend rest
+deactivate
+Pop-Location
+
+# (Step 2) Push the sample APIs (one good, one bad)
+# The push_samples.sh script needs bash — run it via Git Bash, WSL, or skip if seeding manually.
+bash projects\swagger-studio-scanner\samples\push_samples.sh
+
+# (Step 3) Let SwaggerHub evaluate standardization on the new specs
+Start-Sleep -Seconds 25
+
+# (Step 4) Scan
+Push-Location $SCANNER
+.\.venv\Scripts\Activate.ps1
+scanner scan
+deactivate
+Pop-Location
+
+# (Step 5) Generate the executive + platform reports
+Push-Location $REPORTS
+python generate_executive_report.py `
+    --input "$ROOT\$SCANNER\output\scan.json" `
+    --output output\executive-report.html `
+    --org-display-name "Acme Corporation" `
+    --placeholder-ask
+python generate_platform_report.py `
+    --input "$ROOT\$SCANNER\output\scan.json" `
+    --output-dir output\platform-report `
+    --org-display-name "Acme Corporation" `
+    --studio-base-url https://app.swaggerhub.com/apis
+Pop-Location
+
+# (Step 6) Open the HTML reports in your browser
+Write-Host "Open:"
+Write-Host "  $ROOT\$SCANNER\output\scan.html             (scanner's built-in)"
+Write-Host "  $ROOT\$REPORTS\output\executive-report.html (CIO-facing)"
+Write-Host "  $ROOT\$REPORTS\output\platform-report\index.html (platform team)"
+
+# Optional: have Windows open each report in the default browser
+Start-Process "$ROOT\$REPORTS\output\executive-report.html"
+Start-Process "$ROOT\$REPORTS\output\platform-report\index.html"
+```
+
+> **Step 2 caveat on Windows:** `push_samples.sh` is a bash script. If your work laptop doesn't have Git Bash or WSL, either skip Step 2 (and instead seed the org through SwaggerHub UI), or rewrite the script's contents inline — it's just a few `swaggerhub api:create` calls.
+
 Expected on success:
 
 | Step | What to see |
@@ -538,6 +734,8 @@ Expected on success:
 
 ### Resetting between runs
 
+**bash:**
+
 ```bash
 # Delete the sample specs from Studio (requires swaggerhub-cli, or use REST/curl)
 swaggerhub api:delete "$SWAGGERHUB_ORG/scanner-good-petstore" || true
@@ -548,6 +746,19 @@ swaggerhub api:delete "$SWAGGERHUB_ORG/scanner-bad-petstore"  || true
 
 # Remove local scan artifacts
 rm -rf $SCANNER/output $REPORTS/output
+```
+
+**Windows PowerShell:**
+
+```powershell
+# Delete the sample specs from Studio — needs swaggerhub-cli, or use Invoke-RestMethod
+# (Set $env:SWAGGERHUB_ORG / $env:SWAGGERHUB_API_KEY first, or rely on what's in .env if you're inside a venv)
+swaggerhub api:delete "$env:SWAGGERHUB_ORG/scanner-good-petstore"
+swaggerhub api:delete "$env:SWAGGERHUB_ORG/scanner-bad-petstore"
+# (Errors on 404 are fine — means it's already gone.)
+
+# Remove local scan artifacts
+Remove-Item -Recurse -Force $SCANNER\output, $REPORTS\output -ErrorAction SilentlyContinue
 ```
 
 The ruleset stays in place between scans by design — to replace it, re-run `ruleset-publisher publish`.
@@ -568,6 +779,9 @@ The ruleset stays in place between scans by design — to replace it, re-run `ru
 | Publisher REST backend returns 401 | API key lacks write scope | Re-issue an org-owner write key |
 | Scan reports `0` findings on `bad-petstore` | Ruleset isn't active in Studio | Re-run `ruleset-publisher publish` |
 | Reports complain about ownership YAML | PyYAML missing for nested format | `pip install --user pyyaml`, or flatten the file |
+| PowerShell: `Activate.ps1 cannot be loaded because running scripts is disabled` | Default execution policy blocks local scripts | One-time: `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned` |
+| PowerShell: `scanner: The term 'scanner' is not recognized` | venv isn't activated, or activation didn't add `Scripts\` to PATH | Re-run `.\.venv\Scripts\Activate.ps1`. Confirm with `$env:VIRTUAL_ENV` (should print the venv path). |
+| PowerShell: `$env:SSL_CERT_FILE` prints blank in a new terminal | User env var didn't persist | Re-run the `[System.Environment]::SetEnvironmentVariable(..., 'User')` call, then **fully close** the terminal (not just deactivate) and reopen |
 
 ---
 
