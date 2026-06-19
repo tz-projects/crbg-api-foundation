@@ -1,26 +1,65 @@
 # swagger-studio-ruleset-publisher (Python)
 
-Python 3.12, uv-managed. Publishes the [`ruleset/`](../ruleset/) directory to SwaggerHub Studio as the org's active standardization ruleset.
+Python 3.12+. Runs with stock Python — no `uv` required. Publishes the [`ruleset/`](../ruleset/) directory to SwaggerHub Studio as the org's active standardization ruleset.
+
+## First-time setup (plain Python, no uv)
+
+```bash
+# macOS / Linux
+python -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install -e . --no-deps           # registers the `ruleset-publisher` CLI
+
+# Windows (PowerShell)
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install -e . --no-deps
+```
+
+`requirements.txt` pins every dependency to an exact version, so the work laptop matches the Mac dev environment.
+
+> **CLI backend note:** the default `--backend cli` shells out to `swaggerhub spectral:upload`, which requires the Node-based `swaggerhub-cli` to be installed and authenticated. If you only have Python set up, use `--backend rest` — it talks to SwaggerHub directly over HTTPS.
 
 ## Common commands
 
+Once the venv is activated:
+
 ```bash
-uv sync --all-extras
+ruleset-publisher version
 
 # CLI backend (default) — shells out to `swaggerhub spectral:upload`
-uv run ruleset-publisher publish
+ruleset-publisher publish
 
-# REST backend — direct HTTPS PUT
-uv run ruleset-publisher publish --backend rest
+# REST backend — direct HTTPS PUT (no Node CLI needed)
+ruleset-publisher publish --backend rest
 
 # Point at a different ruleset directory
-uv run ruleset-publisher publish --ruleset /path/to/other/ruleset
+ruleset-publisher publish --ruleset /path/to/other/ruleset
+```
 
-# Sanity
-uv run ruleset-publisher version
-uv run pytest
-uv run ruff check .
-uv run mypy src
+For tests, lint, and types you'll also need the dev extras:
+
+```bash
+pip install -e ".[dev]" --no-deps
+pytest
+ruff check .
+mypy src
+```
+
+## Updating the pinned requirements
+
+If you change `pyproject.toml` dependencies, regenerate `requirements.txt`:
+
+```bash
+python -m venv .venv-refresh
+.venv-refresh/bin/pip install --upgrade pip
+.venv-refresh/bin/pip install -e .
+.venv-refresh/bin/pip freeze --exclude-editable | sort > requirements.txt
+rm -rf .venv-refresh
 ```
 
 ## Layout

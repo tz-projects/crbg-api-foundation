@@ -1,6 +1,6 @@
 # swagger-studio-scanner (Python)
 
-Python 3.12 implementation. Managed by [`uv`](https://docs.astral.sh/uv/).
+Python 3.12+ implementation. Runs with stock Python — no `uv` required.
 
 ## Layout
 
@@ -27,19 +27,57 @@ python/
     └── test_reports.py
 ```
 
-## Common commands
+## First-time setup (plain Python, no uv)
 
 ```bash
-uv sync --all-extras    # Install + create .venv (post-create runs this for you)
-uv run scanner version  # Confirm CLI is wired
-uv run scanner probe    # Capability probe (needs .env one level up)
-uv run scanner scan     # Full org scan -> writes output/scan.json + findings.csv + scan.html
-uv run scanner scan -o /tmp/myreport   # Write reports elsewhere
+# macOS / Linux
+python -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install -e . --no-deps          # registers the `scanner` CLI
 
-uv run pytest           # Tests
-uv run ruff check .     # Lint
-uv run ruff format .    # Format
-uv run mypy src         # Strict type-check
+# Windows (PowerShell)
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install -e . --no-deps
+```
+
+`requirements.txt` pins every dependency to an exact version, so the work laptop gets the same set the Mac dev environment was verified on. Re-run `pip install -r requirements.txt` whenever the file changes.
+
+## Common commands
+
+Once the venv is activated:
+
+```bash
+scanner version                      # Confirm CLI is wired
+scanner probe                        # Capability probe (needs .env one level up)
+scanner scan                         # Full org scan -> output/scan.json + findings.csv + scan.html
+scanner scan -o /tmp/myreport        # Write reports elsewhere
+```
+
+For tests, lint, and types you'll also need the dev extras:
+
+```bash
+pip install -e ".[dev]" --no-deps    # adds pytest, ruff, mypy, etc.
+pytest
+ruff check .
+ruff format .
+mypy src
+```
+
+## Updating the pinned requirements
+
+If you change `pyproject.toml` dependencies, regenerate `requirements.txt` from a fresh install:
+
+```bash
+python -m venv .venv-refresh
+.venv-refresh/bin/pip install --upgrade pip
+.venv-refresh/bin/pip install -e .
+.venv-refresh/bin/pip freeze --exclude-editable | sort > requirements.txt
+rm -rf .venv-refresh
 ```
 
 ## Conventions
