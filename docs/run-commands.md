@@ -788,6 +788,7 @@ The ruleset stays in place between scans by design — to replace it, re-run `ru
 ## See also
 
 - [installation.md](installation.md) — toolchain setup (Python 3.12+, venv, pip)
+- [troubleshooting.md](troubleshooting.md) — runnable diagnostics for SSL errors, venv issues, and other common problems
 - [runbook.md](runbook.md) — `uv`-based commands for the devcontainer / personal laptop
 - [reports.md](reports.md) — deeper dive on the Tier 1 / Tier 2 / Tier 3 report design
 - [implementation-context.md](implementation-context.md) — architectural decisions and known gaps
