@@ -82,4 +82,7 @@ Create `projects/<name>/{python,typescript}/` following the same layout as `swag
 
 ## Context
 
-For background on the wider initiative — phases, decisions, constraints — see [smartbear-governance-enforcement-context.md](smartbear-governance-enforcement-context.md).
+Two paired docs:
+
+- [smartbear-governance-enforcement-context.md](smartbear-governance-enforcement-context.md) — **design** context: phases, decisions, constraints, the *why*.
+- [docs/implementation-context.md](docs/implementation-context.md) — **implementation** context / session handoff: what's built, SwaggerHub REST findings, architectural choices made during construction, known gaps. Hand this to a fresh session to continue work cold.
