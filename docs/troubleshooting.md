@@ -30,6 +30,14 @@ If you've already done all five and *still* see the error, the diagnostic below 
 >
 > [tools/diagnose-ssl.py](../tools/diagnose-ssl.py) is a stdlib-only script that walks through Steps 1.1 → 1.5 in one go, prints `[OK]` / `[WARN]` / `[FAIL]` verdicts at each step, and tells you exactly what to do next. Stop reading the manual steps below — just run the script and read its output. The manual steps are kept for reference / debugging when the script itself misbehaves.
 
+> **Tooling check before you start.** This guide reaches for three commands:
+>
+> - **`certutil`** — built into Windows. Always available. Used by `diagnose-ssl.py` to decode certs.
+> - **`openssl`** — optional. Nicer one-line `subject=` / `issuer=` output than `certutil`. If you have Git for Windows, it ships an `openssl.exe` at `C:\Program Files\Git\usr\bin\openssl.exe` — you can use the full path without changing `PATH`. Confirm with `Get-Command openssl -ErrorAction SilentlyContinue`. If the result is empty, `openssl` isn't on PATH; either use the Git-bundled binary or stick with `certutil`.
+> - **PowerShell `Cert:` drive** — built in. The trust-store search commands below use it.
+>
+> You do **not** need to install OpenSSL separately. Anything OpenSSL does in this guide can be done with `certutil` instead (with slightly less convenient formatting).
+
 ### Step 1.1 — Are the env vars visible in *this* terminal?
 
 ```powershell
@@ -121,7 +129,38 @@ certutil -dump server-cert.pem | Select-String "Subject:|Issuer:" -Context 0,1
 
 > **Why `binary_form=True`:** when `verify_mode = CERT_NONE`, Python's `ssl.getpeercert()` returns `{}` (parsed-dict form) to discourage trusting unverified cert metadata. `binary_form=True` returns the raw DER bytes, which we then convert and dump with `certutil`. If you ever see empty Subject/Issuer arrays from a Python TLS script, this is almost always why.
 
-The **`Issuer`** line names the CA that signed the leaf cert. On a corporate network with inspection, this will be a corporate-named CA (e.g. `CN=<YourCompany> SSL Inspection CA`, `CN=Zscaler Intermediate Root`, etc.). If it's a public CA name (`DigiCert`, `Sectigo`, `Let's Encrypt`, `Amazon`), your network isn't doing TLS inspection on this URL — the SSL error is from something else (wrong file extension, corrupted bundle, `PYTHONHTTPSVERIFY` env var set to `0`, etc.).
+> **Reading `certutil -dump` output — the formatting gotcha:** `certutil` does NOT put the DN on the same line as `Subject:` or `Issuer:`. Those lines are headers; the actual `CN=`, `O=`, `C=` components appear on **indented lines below** the header. So output like this is **complete, not empty**:
+>
+> ```
+> Subject:
+>     CN=api.swaggerhub.com         ← this IS the subject
+> Issuer:
+>     O=Your Company                ← part of the issuer
+>     CN=Your Company SSL Inspect.  ← rest of the issuer — together they ARE the issuer
+> ```
+>
+> If you want everything on single lines, use the OpenSSL fallback below — it formats `subject=` and `issuer=` as one line each.
+
+The **`Issuer`** lines name the CA that signed the leaf cert. On a corporate network with inspection, this will be a corporate-named CA (e.g. `CN=<YourCompany> SSL Inspection CA`, `CN=Zscaler Intermediate Root`, etc.). If it's a public CA name (`DigiCert`, `Sectigo`, `Let's Encrypt`, `Amazon`), your network isn't doing TLS inspection on this URL — the SSL error is from something else (wrong file extension, corrupted bundle, `PYTHONHTTPSVERIFY` env var set to `0`, etc.).
+
+> **TLS-inspection tell-tale:** if Subject is `CN=api.swaggerhub.com` (exact host) rather than `CN=*.swaggerhub.com` (wildcard), and Issuer is a company-named CA, you're definitely being inspected. Public CAs almost always issue wildcards for major SaaS; exact-host certs signed by a non-public CA are a textbook signature of corporate TLS inspection.
+
+#### OpenSSL fallback (if `certutil` output is hard to read)
+
+If you have Git for Windows installed, it ships OpenSSL at `C:\Program Files\Git\usr\bin\openssl.exe`. You can use it without changing PATH:
+
+```powershell
+& "C:\Program Files\Git\usr\bin\openssl.exe" x509 -in server-cert.pem -noout -subject -issuer
+```
+
+Output looks like:
+
+```
+subject=CN=api.swaggerhub.com
+issuer=O=Your Company, CN=Your Company SSL Inspection CA
+```
+
+One line each — much easier to read than `certutil` for this purpose. If OpenSSL isn't bundled with Git either, stick with the `certutil` output; the data is the same, just split across more lines.
 
 **To see the entire chain (leaf → intermediate → root):** if `openssl` is on PATH:
 
@@ -132,20 +171,109 @@ openssl s_client -connect api.swaggerhub.com:443 -showcerts < $null 2>$null |
 
 Each `s:` is a Subject, each `i:` is its Issuer, listed in chain order. The last `i:` is the root — that's what needs to be in your bundle.
 
-Compare the `commonName` of the **Issuer** in the output to what you exported. If they don't match:
+### Step 1.5a — Find the matching CA in your trust store, then export it
 
-1. Open `certlm.msc`
-2. Expand **Trusted Root Certification Authorities → Certificates**
-3. Sort by **Issued To** column, find the entry whose name matches the issuer you saw above
-4. Right-click → All Tasks → Export → **Base-64 encoded X.509 (.CER)** → save as `corp-ca-correct.cer`
-5. Update the env vars to point at the new file:
+Once you know the Issuer's `CN`, find it in your Windows trust stores. **Don't open `certlm.msc` and scroll** — PowerShell finds it in one command and can also export it directly, which is safer than the GUI wizard (no risk of picking DER or saving with a BOM).
+
+#### Find it
 
 ```powershell
-[System.Environment]::SetEnvironmentVariable('SSL_CERT_FILE',      "$env:USERPROFILE\corp-ca-correct.cer", 'User')
-[System.Environment]::SetEnvironmentVariable('REQUESTS_CA_BUNDLE', "$env:USERPROFILE\corp-ca-correct.cer", 'User')
+# Replace with the CN value you saw under Issuer
+$search = "Your Company SSL Inspection CA"
+
+Get-ChildItem -Recurse Cert:\LocalMachine, Cert:\CurrentUser -ErrorAction SilentlyContinue |
+    Where-Object { $_.Subject -like "*CN=$search*" } |
+    Select-Object @{N='Location';E={$_.PSParentPath -replace '.*Certificate::',''}},
+                  Subject, Thumbprint, NotAfter |
+    Format-Table -AutoSize
 ```
 
-Reopen the terminal and retry from Step 1.1.
+You'll see one or more rows. Common outcomes:
+
+| Result | Meaning | Next |
+|---|---|---|
+| One row | Single cert match — easy | Export it (next block) |
+| Multiple rows, **same Thumbprint** | Same cert listed in multiple stores (often `LocalMachine\Root` + `CurrentUser\Root` because Group Policy pushed it to both) | Pick any row — export once |
+| Multiple rows, **different Thumbprints** | Multiple distinct certs sharing the name (e.g. old + new rotation pair) | Export each; **append** into one bundle file |
+
+> **`certlm.msc` vs `certmgr.msc` — important distinction:** `certlm.msc` shows **only Local Machine** certs. To see Current User certs (anything reported by PowerShell as `CurrentUser\...`), open `certmgr.msc` instead (note the `mgr`, not `lm`). Mapping:
+>
+> | PowerShell `Location` | MMC snap-in | Folder inside |
+> |---|---|---|
+> | `LocalMachine\Root` | `certlm.msc` | Trusted Root Certification Authorities → Certificates |
+> | `LocalMachine\CA` | `certlm.msc` | Intermediate Certification Authorities → Certificates |
+> | `CurrentUser\Root` | `certmgr.msc` | Trusted Root Certification Authorities → Certificates |
+> | `CurrentUser\CA` | `certmgr.msc` | Intermediate Certification Authorities → Certificates |
+>
+> But you don't need either MMC for the export below — they're listed only for when you want to visually verify what PowerShell found.
+
+#### Export directly via PowerShell (recommended — no wizard, no encoding mistakes)
+
+```powershell
+# Paste the Thumbprint from the search output (40-char hex string)
+$tp = '7A3F9C12B4D8E5F6A1B2C3D4E5F6A1B2C3D4E5F6'
+
+$cert = Get-ChildItem -Recurse Cert:\LocalMachine, Cert:\CurrentUser -ErrorAction SilentlyContinue |
+        Where-Object Thumbprint -eq $tp |
+        Select-Object -First 1
+
+if (-not $cert) {
+    Write-Host "Cert with thumbprint $tp not found" -ForegroundColor Red
+} else {
+    $pem = "-----BEGIN CERTIFICATE-----`n" +
+           [System.Convert]::ToBase64String($cert.RawData, 'InsertLineBreaks') +
+           "`n-----END CERTIFICATE-----"
+    Set-Content -Path "$env:USERPROFILE\corp-ca.cer" -Value $pem -Encoding ASCII -Force
+    Write-Host "Exported to: $env:USERPROFILE\corp-ca.cer" -ForegroundColor Green
+
+    # Sanity check — should print -----BEGIN CERTIFICATE-----
+    Get-Content "$env:USERPROFILE\corp-ca.cer" -TotalCount 1
+}
+```
+
+This is the **safer alternative to the `certlm.msc` export wizard**:
+
+- Always writes Base-64 PEM (no risk of accidentally picking DER)
+- Always writes plain ASCII (no UTF-16 BOM headaches)
+- One command, no clicks, no wizard
+
+#### If you need both certs (different thumbprints from the search)
+
+```powershell
+# First cert (overwrite)
+$tp = '<first-thumbprint>'
+$cert = Get-ChildItem -Recurse Cert:\LocalMachine, Cert:\CurrentUser -ErrorAction SilentlyContinue |
+        Where-Object Thumbprint -eq $tp | Select-Object -First 1
+$pem = "-----BEGIN CERTIFICATE-----`n" +
+       [System.Convert]::ToBase64String($cert.RawData, 'InsertLineBreaks') +
+       "`n-----END CERTIFICATE-----"
+Set-Content -Path "$env:USERPROFILE\corp-ca.cer" -Value $pem -Encoding ASCII -Force
+
+# Second cert (append)
+$tp = '<second-thumbprint>'
+$cert = Get-ChildItem -Recurse Cert:\LocalMachine, Cert:\CurrentUser -ErrorAction SilentlyContinue |
+        Where-Object Thumbprint -eq $tp | Select-Object -First 1
+$pem = "-----BEGIN CERTIFICATE-----`n" +
+       [System.Convert]::ToBase64String($cert.RawData, 'InsertLineBreaks') +
+       "`n-----END CERTIFICATE-----"
+Add-Content -Path "$env:USERPROFILE\corp-ca.cer" -Value $pem -Encoding ASCII
+
+# Verify both landed
+(Get-Content "$env:USERPROFILE\corp-ca.cer") -match 'BEGIN CERTIFICATE' | Measure-Object | Select Count
+# Expect: Count : 2
+```
+
+#### Update env vars and re-verify
+
+```powershell
+[System.Environment]::SetEnvironmentVariable('SSL_CERT_FILE',      "$env:USERPROFILE\corp-ca.cer", 'User')
+[System.Environment]::SetEnvironmentVariable('REQUESTS_CA_BUNDLE', "$env:USERPROFILE\corp-ca.cer", 'User')
+
+# Close PowerShell completely, open a fresh window, then:
+python tools\diagnose-ssl.py
+```
+
+Step 4 of the diagnostic should now print `[OK] TLS handshake succeeded`. If yes, `scanner probe` will work too. If it still fails with `unable to get local issuer certificate`, you're missing an intermediate — see Step 1.6.
 
 ### Step 1.6 — Missing intermediate CA in the chain
 
@@ -158,35 +286,71 @@ SwaggerHub leaf  →  Corporate Intermediate  →  Corporate Root  ← you have 
 
 You need to append the intermediate to your bundle.
 
-1. Open `certlm.msc`
-2. Expand **Intermediate Certification Authorities → Certificates**
-3. Find the entry whose name matches the corporate intermediate (often has "Intermediate" or "Issuing CA" in the name)
-4. Export as **Base-64 X.509 (.CER)** → save as `corp-intermediate.cer`
-5. Append it to your existing bundle. Two ways:
+#### Find the intermediate
 
-**Option A — PowerShell one-liner:**
+The intermediate's **Subject** equals the **Issuer of your existing root-CA cert**. To see what to search for, run:
+
+```powershell
+# Get the Issuer DN of the root you already exported
+& "C:\Program Files\Git\usr\bin\openssl.exe" x509 -in $env:USERPROFILE\corp-ca.cer -noout -issuer
+# Or with certutil if openssl isn't available:
+certutil -dump $env:USERPROFILE\corp-ca.cer | Select-String "Issuer:" -Context 0,3
+```
+
+Then search for that Subject in the **Intermediate** store:
+
+```powershell
+$search = "<CN from the issuer line above>"
+
+Get-ChildItem -Recurse Cert:\LocalMachine\CA, Cert:\CurrentUser\CA -ErrorAction SilentlyContinue |
+    Where-Object { $_.Subject -like "*CN=$search*" } |
+    Select-Object @{N='Location';E={$_.PSParentPath -replace '.*Certificate::',''}},
+                  Subject, Thumbprint, NotAfter |
+    Format-Table -AutoSize
+```
+
+(`Cert:\...\CA` is where Windows stores intermediate CAs, even though the variable name might suggest otherwise.)
+
+#### Append the intermediate to your existing bundle
+
+Use the same PowerShell-direct-export pattern from Step 1.5a, but with `Add-Content` to append rather than overwrite:
+
+```powershell
+$tp = '<intermediate-cert-thumbprint>'
+
+$cert = Get-ChildItem -Recurse Cert:\LocalMachine, Cert:\CurrentUser -ErrorAction SilentlyContinue |
+        Where-Object Thumbprint -eq $tp |
+        Select-Object -First 1
+
+$pem = "-----BEGIN CERTIFICATE-----`n" +
+       [System.Convert]::ToBase64String($cert.RawData, 'InsertLineBreaks') +
+       "`n-----END CERTIFICATE-----"
+Add-Content -Path "$env:USERPROFILE\corp-ca.cer" -Value $pem -Encoding ASCII
+
+# Verify the bundle now has two certs
+(Get-Content "$env:USERPROFILE\corp-ca.cer") -match 'BEGIN CERTIFICATE' | Measure-Object | Select Count
+# Expect: Count : 2 (or higher if you appended multiple)
+```
+
+Order in the bundle doesn't matter — OpenSSL / Python parse all the `BEGIN CERTIFICATE` blocks and pick the right one to verify against. Just make sure both are in there.
+
+#### Alternative: combine separate `.cer` files into one bundle
+
+If you already exported the intermediate to its own file (e.g. via the wizard), combine them:
 
 ```powershell
 Get-Content "$env:USERPROFILE\corp-ca.cer", "$env:USERPROFILE\corp-intermediate.cer" |
     Set-Content -Encoding ASCII "$env:USERPROFILE\corp-ca-bundle.pem"
 
-# Verify it has two certs
+# Verify
 (Get-Content "$env:USERPROFILE\corp-ca-bundle.pem") -match 'BEGIN CERTIFICATE' | Measure-Object | Select Count
-# Expect: Count : 2
-```
 
-**Option B — VS Code:**
-
-Open `corp-ca.cer`, append the entire contents of `corp-intermediate.cer` at the end (each cert wrapped in `-----BEGIN CERTIFICATE-----` / `-----END CERTIFICATE-----`), save as `corp-ca-bundle.pem` with encoding `UTF-8` (NOT `UTF-8 with BOM`).
-
-6. Point the env vars at the bundle:
-
-```powershell
+# Then point env vars at the combined file
 [System.Environment]::SetEnvironmentVariable('SSL_CERT_FILE',      "$env:USERPROFILE\corp-ca-bundle.pem", 'User')
 [System.Environment]::SetEnvironmentVariable('REQUESTS_CA_BUNDLE', "$env:USERPROFILE\corp-ca-bundle.pem", 'User')
 ```
 
-Reopen the terminal and retry from Step 1.4 (the httpx test).
+Reopen the terminal and retry from Step 1.4 (or just re-run `python tools\diagnose-ssl.py` and look at Step 4's verdict).
 
 ---
 
