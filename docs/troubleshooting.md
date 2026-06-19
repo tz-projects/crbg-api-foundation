@@ -22,6 +22,14 @@ Quick fix overview (full procedure in [installation.md §5.2](installation.md#52
 
 If you've already done all five and *still* see the error, the diagnostic below tells you which step failed. Run each step in your **activated venv** PowerShell terminal.
 
+> **Shortcut: run the full diagnostic as one script.** From the repo root:
+>
+> ```powershell
+> python tools\diagnose-ssl.py
+> ```
+>
+> [tools/diagnose-ssl.py](../tools/diagnose-ssl.py) is a stdlib-only script that walks through Steps 1.1 → 1.5 in one go, prints `[OK]` / `[WARN]` / `[FAIL]` verdicts at each step, and tells you exactly what to do next. Stop reading the manual steps below — just run the script and read its output. The manual steps are kept for reference / debugging when the script itself misbehaves.
+
 ### Step 1.1 — Are the env vars visible in *this* terminal?
 
 ```powershell
@@ -87,7 +95,7 @@ python -c "import httpx; r = httpx.get('https://api.swaggerhub.com'); print('HTT
 
 ### Step 1.5 — What CA is *actually* signing SwaggerHub on your network?
 
-Sometimes the corporate network has multiple inspection CAs — you might have exported the wrong one. This shows you which one needs to be in your bundle:
+Sometimes the corporate network has multiple inspection CAs — you might have exported the wrong one. This downloads the leaf cert SwaggerHub presents on your network and decodes it with Windows' built-in `certutil`:
 
 ```powershell
 python -c "
@@ -97,13 +105,32 @@ ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 with socket.create_connection(('api.swaggerhub.com', 443), timeout=10) as s:
     with ctx.wrap_socket(s, server_hostname='api.swaggerhub.com') as ss:
-        cert = ss.getpeercert()
-        print('Subject:', dict(x[0] for x in cert.get('subject', [])))
-        print('Issuer :', dict(x[0] for x in cert.get('issuer', [])))
+        der = ss.getpeercert(binary_form=True)
+        if not der:
+            print('NO CERT RECEIVED'); raise SystemExit(1)
+        print('Cert received:', len(der), 'bytes')
+        print('TLS cipher   :', ss.cipher()[0])
+        pem = ssl.DER_cert_to_PEM_cert(der)
+        with open('server-cert.pem', 'w') as f: f.write(pem)
+        print('Saved to     : server-cert.pem')
 "
+
+# Decode the saved cert — built into Windows, no install needed
+certutil -dump server-cert.pem | Select-String "Subject:|Issuer:" -Context 0,1
 ```
 
-The **`Issuer`** line names the CA that signed the leaf cert. On a corporate network with inspection, this will be a corporate-named CA (e.g. `commonName: <YourCompany> SSL Inspection CA`, or `Zscaler Intermediate Root`, or similar).
+> **Why `binary_form=True`:** when `verify_mode = CERT_NONE`, Python's `ssl.getpeercert()` returns `{}` (parsed-dict form) to discourage trusting unverified cert metadata. `binary_form=True` returns the raw DER bytes, which we then convert and dump with `certutil`. If you ever see empty Subject/Issuer arrays from a Python TLS script, this is almost always why.
+
+The **`Issuer`** line names the CA that signed the leaf cert. On a corporate network with inspection, this will be a corporate-named CA (e.g. `CN=<YourCompany> SSL Inspection CA`, `CN=Zscaler Intermediate Root`, etc.). If it's a public CA name (`DigiCert`, `Sectigo`, `Let's Encrypt`, `Amazon`), your network isn't doing TLS inspection on this URL — the SSL error is from something else (wrong file extension, corrupted bundle, `PYTHONHTTPSVERIFY` env var set to `0`, etc.).
+
+**To see the entire chain (leaf → intermediate → root):** if `openssl` is on PATH:
+
+```powershell
+openssl s_client -connect api.swaggerhub.com:443 -showcerts < $null 2>$null |
+    Select-String "s:|i:"
+```
+
+Each `s:` is a Subject, each `i:` is its Issuer, listed in chain order. The last `i:` is the root — that's what needs to be in your bundle.
 
 Compare the `commonName` of the **Issuer** in the output to what you exported. If they don't match:
 

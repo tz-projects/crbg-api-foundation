@@ -71,3 +71,6 @@ projects/reports/asks.md
 http-requests.md
 *.har
 *.har.sanitized
+
+# --- Diagnostic outputs ---
+server-cert.pem
