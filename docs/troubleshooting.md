@@ -460,7 +460,7 @@ Most common cause on Windows: an old `.venv` folder from a previous Python versi
 ```powershell
 # From the project folder (e.g. projects\swagger-studio-scanner\python)
 Remove-Item -Recurse -Force .venv -ErrorAction SilentlyContinue
-python --version       # confirm 3.12 or higher
+python --version       # confirm 3.13 or higher
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
@@ -468,7 +468,7 @@ pip install -r requirements.txt
 pip install -e . --no-deps
 ```
 
-If `python --version` shows something below 3.12, you're picking up an older Python from PATH. Either install 3.12+ explicitly, or use the full path: `& "C:\Path\To\Python312\python.exe" -m venv .venv`.
+If `python --version` shows something below 3.13, you're picking up an older Python from PATH. Either install 3.13+ explicitly, or use the full path: `& "C:\Path\To\Python313\python.exe" -m venv .venv`.
 
 ---
 
@@ -530,6 +530,6 @@ That output identifies: Python version, venv state, cert config, proxy state, an
 
 ## See also
 
-- [installation.md](installation.md) — toolchain install (Python 3.12+, venv, pip) and corporate-laptop gotchas in §5
+- [installation.md](installation.md) — toolchain install (Python 3.13+, venv, pip) and corporate-laptop gotchas in §5
 - [run-commands.md](run-commands.md) — every command + every flag, with a one-line troubleshooting table in §5
 - [reports.md](reports.md) — report generators and their tier-status summary lines

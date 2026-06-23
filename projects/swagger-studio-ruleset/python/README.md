@@ -1,6 +1,6 @@
 # swagger-studio-ruleset-publisher (Python)
 
-Python 3.12+. Runs with stock Python — no `uv` required. Publishes the [`ruleset/`](../ruleset/) directory to SwaggerHub Studio as the org's active standardization ruleset.
+Python 3.13+. Runs with stock Python — no `uv` required. Publishes the [`ruleset/`](../ruleset/) directory to SwaggerHub Studio as the org's active standardization ruleset.
 
 ## First-time setup (plain Python, no uv)
 

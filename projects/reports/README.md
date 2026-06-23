@@ -17,7 +17,7 @@ reports/
 
 ## Run them
 
-The only requirement is Python 3.12+ (`python --version`). Both scripts run directly:
+The only requirement is Python 3.13+ (`python --version`). Both scripts run directly:
 
 ```bash
 cd projects/reports

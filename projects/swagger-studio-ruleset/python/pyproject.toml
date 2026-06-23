@@ -3,7 +3,7 @@ name = "swagger-studio-ruleset-publisher"
 version = "0.1.0"
 description = "Publishes the API Foundation Spectral ruleset to SwaggerHub Studio."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 license = { text = "Proprietary" }
 authors = [{ name = "API Foundation Platform Team" }]
 
@@ -39,7 +39,7 @@ packages = ["src/swagger_studio_ruleset_publisher"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py313"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
@@ -54,7 +54,7 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 strict = true
 plugins = ["pydantic.mypy"]
 files = ["src", "tests"]

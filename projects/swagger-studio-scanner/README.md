@@ -4,7 +4,7 @@ Org-wide non-conformance scanner for SmartBear Swagger Studio. Enumerates every 
 
 Two implementations live side-by-side:
 
-- [`python/`](./python/) — Python 3.12, uv, ruff, mypy, pytest, httpx (async)
+- [`python/`](./python/) — Python 3.13, uv, ruff, mypy, pytest, httpx (async)
 - [`typescript/`](./typescript/) — Node 20, pnpm, eslint, prettier, vitest, native fetch + p-limit
 
 Both target the same REST endpoints on `https://api.swaggerhub.com` and produce identically-shaped output. See [`smartbear-governance-enforcement-context.md`](../../smartbear-governance-enforcement-context.md) §8 for the design.

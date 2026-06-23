@@ -1,6 +1,6 @@
 # swagger-studio-scanner (Python)
 
-Python 3.12+ implementation. Runs with stock Python — no `uv` required.
+Python 3.13+ implementation. Runs with stock Python — no `uv` required.
 
 ## Layout
 

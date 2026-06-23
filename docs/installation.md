@@ -38,28 +38,28 @@ This single `.env` is read by **both** the Python and TypeScript implementations
 
 | Tool | Required version | Purpose |
 |---|---|---|
-| Python | **3.12+** | Runtime |
+| Python | **3.13+** | Runtime |
 | pip + venv | shipped with Python | Package manager + virtualenv (both included in the stock Python install) |
 
 > **No `uv` needed on the work laptop.** The `pure-python` branch ships pinned `requirements.txt` files so a clone-and-pip flow works without any extra toolchain. If you're on a personal machine and prefer `uv`, the `uv sync` flow still works against the same `pyproject.toml` — see §2.5 below.
 
-### 2.2 Install Python 3.12
+### 2.2 Install Python 3.13
 
 Pick one path based on what your work laptop allows.
 
 **Windows (no admin rights — most restrictive):**
 - [python.org installer](https://www.python.org/downloads/) → check "Install for my user only" (no admin needed). Verify with `python --version`.
-- Or via the Microsoft Store: search "Python 3.12" → Install (user-scope, no admin).
+- Or via the Microsoft Store: search "Python 3.13" → Install (user-scope, no admin).
 
 **Windows (with admin or winget):**
 ```powershell
-winget install --id Python.Python.3.12
+winget install --id Python.Python.3.13
 ```
 
 **macOS:**
 ```bash
 # Homebrew (recommended if you have it)
-brew install python@3.12
+brew install python@3.13
 
 # Or python.org installer if Homebrew is blocked
 ```
@@ -67,8 +67,8 @@ brew install python@3.12
 **Linux:**
 ```bash
 # Most distros: use the system package manager
-sudo apt install python3.12 python3.12-venv      # Debian/Ubuntu
-sudo dnf install python3.12                       # Fedora/RHEL
+sudo apt install python3.13 python3.13-venv      # Debian/Ubuntu (may need the deadsnakes PPA)
+sudo dnf install python3.13                       # Fedora/RHEL
 ```
 
 **If your laptop blocks all of the above**, use [pyenv](https://github.com/pyenv/pyenv) (Linux/macOS) or [pyenv-win](https://github.com/pyenv-win/pyenv-win) (Windows) — it builds Python in your user directory with no system changes.
@@ -76,7 +76,7 @@ sudo dnf install python3.12                       # Fedora/RHEL
 Verify:
 ```bash
 python --version    # or python3 --version
-# Expected: Python 3.12.x
+# Expected: Python 3.13.x
 ```
 
 ### 2.3 Build and run the Python scanner (plain pip)
@@ -343,7 +343,7 @@ If you install VS Code, the workspace ships `.vscode/extensions.json` with the f
 For someone copying this into a setup ticket, the absolute minimum:
 
 **Python path (work laptop, no uv):**
-1. Python 3.12+ (`python --version`)
+1. Python 3.13+ (`python --version`)
 2. `cd projects/swagger-studio-scanner/python`
 3. `python -m venv .venv && source .venv/bin/activate` (or `.venv\Scripts\Activate.ps1` on Windows)
 4. `pip install -r requirements.txt && pip install -e . --no-deps`
