@@ -6,7 +6,7 @@ The **sequential, do-this-then-this** guide for deploying the scanner and report
 - **No Docker on the VDI** — the scanner is packaged as a Lambda **Layer + code zip**, not a container image.
 - **Reports needs no build at all** — it's stdlib-only, deployed straight from the VDI.
 
-If you want the *concepts* behind any step (what a Layer is, why least-privilege roles, etc.), read [aws-lambda-walkthrough.md](aws-lambda-walkthrough.md). This doc is just the runnable sequence. The ruleset publisher is out of scope.
+If you want the *concepts* behind any step (what a Layer is, why least-privilege roles, etc.), read [aws-lambda-walkthrough.md](aws-lambda-walkthrough.md). For the bare command list with no prose, see [aws-lambda-quickstart.md](aws-lambda-quickstart.md). This doc is the runnable sequence with the transport details. The ruleset publisher is out of scope.
 
 ## The whole flow on one page
 
