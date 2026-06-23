@@ -74,3 +74,10 @@ http-requests.md
 
 # --- Diagnostic outputs ---
 server-cert.pem
+
+# --- Lambda build outputs ---
+*-lambda.zip
+scanner-source.zip
+scanner-deps-layer.zip
+scanner-code.zip
+scanner-project.zip

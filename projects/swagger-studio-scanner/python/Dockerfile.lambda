@@ -1,0 +1,24 @@
+# Container image for the swagger-studio-scanner Lambda.
+#
+# Build (from CloudShell, which has Docker preinstalled):
+#   cd projects/swagger-studio-scanner/python
+#   docker build -f Dockerfile.lambda -t swagger-studio-scanner-lambda:latest .
+#
+# Push to ECR + deploy: see docs/aws-lambda-deployment.md §3.
+
+FROM public.ecr.aws/lambda/python:3.13
+
+# Lambda's task root is /var/task. Install deps + the package itself there.
+WORKDIR ${LAMBDA_TASK_ROOT}
+
+# Copy only the bits needed for `pip install -e .` to succeed.
+COPY pyproject.toml requirements.txt README.md ./
+COPY src/ ./src/
+
+# Pinned runtime deps from requirements.txt + the project itself (no-deps to
+# avoid re-resolving anything). boto3 is already in the base image.
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -e . --no-deps
+
+# The Lambda runtime invokes the function by dotted path.
+CMD ["swagger_studio_scanner.lambda_handler.handler"]
