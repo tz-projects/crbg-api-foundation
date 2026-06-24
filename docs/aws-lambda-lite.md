@@ -9,6 +9,8 @@ This is the variant on the `pure-python-aws-lambda-lite` branch. For the product
 
 > **When lite is the right choice:** trials, demos, partial/`--limit` scans, getting unblocked fast on a locked-down VDI. **When to graduate to heavy:** sensitive API keys (env vars are visible in the console) or full 600-API scans (a synchronous response caps at ~6 MB — small/limited scans are fine, full estate may exceed it).
 
+> **Just want to hand three zips to your AWS team?** Skip the deploy/run scripts. Run [`tools/build-lambda-zips.ps1`](../tools/build-lambda-zips.ps1) (VDI) to produce `scanner-deps-layer.zip`, `scanner-code.zip`, `reports-code.zip`, upload them to SharePoint, and give your team [aws-lambda-handoff.md](aws-lambda-handoff.md) — a click-by-click sheet for creating the functions. That's the lowest-overhead path.
+
 ## Architecture
 
 ```
