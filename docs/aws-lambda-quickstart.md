@@ -1,5 +1,8 @@
 # AWS Lambda quickstart — the cheat sheet
 
+> ⚠️ **This branch (`pure-python-aws-lambda-lite`) ships the LITE handlers (no S3, no SSM).** This cheat sheet describes the **heavy** S3/SSM variant. For this branch's actual deployment, follow **[aws-lambda-lite.md](aws-lambda-lite.md)**. The heavy variant lives on the `pure-python-aws-lambda-heavy` branch.
+
+
 The shortest path to running the scanner and reports on AWS Lambda. Each command is labelled by **where** it runs (VDI PowerShell / AWS Console / CloudShell). For the *why* behind each step, see [aws-lambda-runbook.md](aws-lambda-runbook.md) (detailed) and [aws-lambda-walkthrough.md](aws-lambda-walkthrough.md) (concepts + validation).
 
 Substitute three values throughout: **`$REGION`**, **`$BUCKET`**, and **`your-org-slug`**. Everything else is literal.

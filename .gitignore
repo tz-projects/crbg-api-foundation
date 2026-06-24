@@ -77,7 +77,9 @@ server-cert.pem
 
 # --- Lambda build outputs ---
 *-lambda.zip
+lambda-lite.zip
 scanner-source.zip
 scanner-deps-layer.zip
 scanner-code.zip
 scanner-project.zip
+lite-output/

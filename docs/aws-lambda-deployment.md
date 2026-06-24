@@ -1,5 +1,8 @@
 # Running the scanner and reports on AWS Lambda
 
+> ⚠️ **This branch (`pure-python-aws-lambda-lite`) ships the LITE handlers (no S3, no SSM).** This document is the **heavy** S3/SSM reference. For this branch's actual deployment, follow **[aws-lambda-lite.md](aws-lambda-lite.md)**.
+
+
 End-to-end guide for deploying the **scanner** and the **reports** Python programs to AWS Lambda, invoked **manually** (no schedule, no API Gateway). Output lands in S3.
 
 This is the right setup when your work-laptop / VDI can't reach `api.swaggerhub.com` over HTTPS (corporate TLS inspection blocks Python — see [troubleshooting.md §1](troubleshooting.md#1-ssl-certificate_verify_failed--self-signed-certificate-in-certificate-chain)) but the team's AWS account can. Lambda runs in AWS-managed networking and reaches public SaaS cleanly with the default certifi trust bundle — no corporate-CA dance.

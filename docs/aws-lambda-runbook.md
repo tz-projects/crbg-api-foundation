@@ -1,5 +1,8 @@
 # AWS Lambda runbook — no Git, no Docker, copy-paste
 
+> ⚠️ **This branch (`pure-python-aws-lambda-lite`) ships the LITE handlers (no S3, no SSM).** This runbook describes the **heavy** S3/SSM variant. For this branch's actual deployment, follow **[aws-lambda-lite.md](aws-lambda-lite.md)**.
+
+
 The **sequential, do-this-then-this** guide for deploying the scanner and reports to AWS Lambda under real corporate constraints:
 
 - **No Git repo to clone** — you move code as a zip file instead.

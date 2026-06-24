@@ -1,5 +1,8 @@
 # AWS Lambda walkthrough — a beginner's hand-holding guide
 
+> ⚠️ **This branch (`pure-python-aws-lambda-lite`) ships the LITE handlers (no S3, no SSM).** The concepts below apply broadly, but the S3/SSM-specific steps are for the **heavy** variant. For this branch's actual deployment, follow **[aws-lambda-lite.md](aws-lambda-lite.md)**.
+
+
 A slow, concept-first companion to [aws-lambda-deployment.md](aws-lambda-deployment.md). That doc is the terse command reference; **this doc explains what each step does, why, and — crucially — how to confirm it actually worked** before you move on.
 
 Scope: the **scanner** and the **reports generator** only. The ruleset publisher is intentionally skipped.

@@ -1,59 +1,60 @@
-"""AWS Lambda handler for the swagger-studio-scanner.
+"""AWS Lambda handler for the swagger-studio-scanner — LITE variant.
 
-This is a thin wrapper around the existing async ``scan_org()`` orchestrator.
-The scanner code itself is untouched — the handler reads config from Lambda
-environment variables + SSM Parameter Store, runs the scan, and uploads the
-resulting ``scan.json`` to S3.
+No S3, no SSM, no boto3. The simplest possible deployment:
 
-Invocation (manual, from CloudShell or any machine with the AWS CLI):
+  - The SwaggerHub API key + org come from plain Lambda environment variables
+    (read by the existing Settings/config layer, which sources env vars).
+  - The scan result (scan.json) is returned INLINE in the invoke response,
+    not written to S3. You save the response and feed it to the reports
+    Lambda (or the local reports generator).
+
+Invocation (manual):
 
     aws lambda invoke \\
         --function-name swagger-studio-scanner \\
-        --payload '{
-            "s3_bucket": "your-bucket",
-            "s3_prefix": "scans/2026-06-22/",
-            "limit": 25
-        }' \\
+        --cli-binary-format raw-in-base64-out \\
+        --payload '{"limit": 25}' \\
         out.json
 
 Event schema:
 
+    { "limit": int | null }   # OPTIONAL — same as the scanner CLI's --limit/-n
+
+Response:
+
     {
-        "s3_bucket": str,     # REQUIRED — destination bucket
-        "s3_prefix": str,     # REQUIRED — S3 key prefix; "/scan.json" appended
-        "limit":     int|null # OPTIONAL — equivalent to scanner CLI's --limit/-n
+        "statusCode": 200,
+        "summary": { ... aggregate counts ... },
+        "ruleset": { ... } | null,
+        "scan": { ... the full scan.json object ... }   # feed this to reports
     }
 
 Required Lambda environment variables:
 
-    SWAGGERHUB_ORG               Org slug to scan
-    SSM_API_KEY_PARAMETER        Name of an SSM SecureString parameter holding
-                                 the SwaggerHub API key
-                                 (e.g. /scanner/swaggerhub_api_key)
+    SWAGGERHUB_API_KEY    Org-owner read key (plain env var — visible in the
+                          console; fine for a trial key, use the SSM variant
+                          on the heavy branch for sensitive keys)
+    SWAGGERHUB_ORG        Org slug to scan
 
-Optional Lambda environment variables (same names as the CLI uses):
+Optional env vars (same names as the CLI):
 
-    SWAGGERHUB_BASE_URL          Default https://api.swaggerhub.com
-    SCANNER_CONCURRENCY          Default 8
-    SCANNER_REQUEST_TIMEOUT_S    Default 30
-    SCANNER_LOG_LEVEL            Default INFO
+    SWAGGERHUB_BASE_URL, SCANNER_CONCURRENCY, SCANNER_REQUEST_TIMEOUT_S,
+    SCANNER_LOG_LEVEL
 
-Required IAM permissions for the Lambda execution role:
+IAM: only basic logging is needed (AWSLambdaBasicExecutionRole). No S3, no SSM.
 
-    - ssm:GetParameter on the parameter named in SSM_API_KEY_PARAMETER
-    - s3:PutObject on the destination bucket/prefix
-    - logs:CreateLogStream, logs:PutLogEvents (granted by AWSLambdaBasicExecutionRole)
+Note on the 6 MB response limit: a synchronous Lambda response caps at ~6 MB.
+A small or --limit'ed scan is well under that. A full 600-API scan may exceed
+it — chunk with "limit", or use the S3 (heavy) variant for full-estate runs.
 """
 
 from __future__ import annotations
 
 import asyncio
-import os
+import json
 import tempfile
 from pathlib import Path
 from typing import Any
-
-import boto3
 
 from swagger_studio_scanner.config import load_settings
 from swagger_studio_scanner.logging_setup import configure_logging
@@ -61,30 +62,11 @@ from swagger_studio_scanner.pareto import ScanSummary
 from swagger_studio_scanner.reports import write_json
 from swagger_studio_scanner.scanner import scan_org
 
-_ssm = boto3.client("ssm")
-_s3 = boto3.client("s3")
-
-
-def _hydrate_env_from_ssm() -> None:
-    """Pull the API key from SSM and inject it into the env so Settings sees it.
-
-    Settings (pydantic-settings) reads from env vars first, so this needs to
-    happen BEFORE load_settings() is called.
-    """
-    if "SWAGGERHUB_API_KEY" in os.environ:
-        return  # already set (e.g. for local testing)
-    param_name = os.environ["SSM_API_KEY_PARAMETER"]
-    resp = _ssm.get_parameter(Name=param_name, WithDecryption=True)
-    os.environ["SWAGGERHUB_API_KEY"] = resp["Parameter"]["Value"]
-
 
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
-    bucket = event["s3_bucket"]
-    prefix = event["s3_prefix"].rstrip("/") + "/"
-    limit = event.get("limit")
+    limit = event.get("limit") if isinstance(event, dict) else None
 
-    _hydrate_env_from_ssm()
-    settings = load_settings()
+    settings = load_settings()  # SWAGGERHUB_API_KEY + SWAGGERHUB_ORG from env vars
     configure_logging(settings.scanner_log_level)
 
     report = asyncio.run(scan_org(settings, limit=limit))
@@ -92,44 +74,33 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     if not report.results:
         return {
             "statusCode": 200,
-            "body": {
-                "warning": "No APIs returned by Studio listing endpoint.",
-                "org": settings.swaggerhub_org,
-                "limit_applied": limit,
-            },
+            "warning": "No APIs returned by Studio listing endpoint.",
+            "org": settings.swaggerhub_org,
+            "limit_applied": limit,
+            "scan": None,
         }
 
-    # Write scan.json to /tmp (the only writable filesystem in Lambda),
-    # then upload to S3. Reuses the canonical writer so the on-disk schema
-    # matches what the reports project expects.
-    with tempfile.TemporaryDirectory() as tmpdir:
-        json_path = write_json(report, Path(tmpdir))
-        s3_key = f"{prefix}scan.json"
-        _s3.upload_file(
-            str(json_path),
-            bucket,
-            s3_key,
-            ExtraArgs={"ContentType": "application/json"},
-        )
+    # Reuse the canonical writer (to /tmp, the only writable FS in Lambda),
+    # then read it back so the returned object matches the on-disk schema the
+    # reports generator expects.
+    with tempfile.TemporaryDirectory() as tmp:
+        json_path = write_json(report, Path(tmp))
+        scan = json.loads(json_path.read_text(encoding="utf-8"))
 
     summary = ScanSummary.from_results(report.results)
     return {
         "statusCode": 200,
-        "body": {
-            "scan_json_s3_uri": f"s3://{bucket}/{s3_key}",
-            "summary": {
-                "total_apis": summary.total_apis,
-                "passed": summary.passed,
-                "warned": summary.warned,
-                "failed": summary.failed,
-                "errored": summary.errored,
-                "total_findings": summary.total_findings,
-                "critical_findings": summary.critical_findings,
-                "warning_findings": summary.warning_findings,
-            },
-            "ruleset": (
-                report.ruleset.model_dump(mode="json") if report.ruleset else None
-            ),
-            "limit_applied": limit,
+        "summary": {
+            "total_apis": summary.total_apis,
+            "passed": summary.passed,
+            "warned": summary.warned,
+            "failed": summary.failed,
+            "errored": summary.errored,
+            "total_findings": summary.total_findings,
+            "critical_findings": summary.critical_findings,
+            "warning_findings": summary.warning_findings,
         },
+        "ruleset": report.ruleset.model_dump(mode="json") if report.ruleset else None,
+        "limit_applied": limit,
+        "scan": scan,
     }
