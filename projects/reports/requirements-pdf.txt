@@ -1,0 +1,5 @@
+# Optional dependencies for PDF report generation (generate_pdf_reports.py).
+# The HTML report generators need none of this — they are standard-library only.
+# Install with:  pip install -r requirements-pdf.txt
+pillow==12.2.0
+reportlab==5.0.0

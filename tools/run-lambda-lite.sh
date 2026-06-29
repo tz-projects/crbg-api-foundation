@@ -81,6 +81,16 @@ jq -r '.executive_html' "$OUT_DIR/reports-response.json" > "$OUT_DIR/executive-r
 jq -r '.platform_html'  "$OUT_DIR/reports-response.json" > "$OUT_DIR/platform-report.html"
 jq -r '.findings_csv'   "$OUT_DIR/reports-response.json" > "$OUT_DIR/findings.csv"
 
+# PDFs are present only when the reports package bundles reportlab.
+PDF_NOTE=""
+if jq -e '.executive_pdf_base64' "$OUT_DIR/reports-response.json" >/dev/null 2>&1; then
+    jq -r '.executive_pdf_base64' "$OUT_DIR/reports-response.json" | base64 -d > "$OUT_DIR/executive-report.pdf"
+    jq -r '.platform_pdf_base64'  "$OUT_DIR/reports-response.json" | base64 -d > "$OUT_DIR/platform-report.pdf"
+    PDF_NOTE=$'\n  executive-report.pdf\n  platform-report.pdf'
+elif jq -e '.pdf_warning' "$OUT_DIR/reports-response.json" >/dev/null 2>&1; then
+    PDF_NOTE=$'\n  (PDF skipped: '"$(jq -r '.pdf_warning' "$OUT_DIR/reports-response.json")"')'
+fi
+
 # Tidy intermediate payloads.
 rm -f "$OUT_DIR/reports-payload.json"
 
@@ -88,7 +98,7 @@ echo ""
 echo "Done. Wrote to $OUT_DIR/:"
 echo "  executive-report.html"
 echo "  platform-report.html"
-echo "  findings.csv"
+echo "  findings.csv${PDF_NOTE}"
 echo "  scan-response.json  (raw scanner output; .scan is the scan.json)"
 echo ""
 echo "Download via CloudShell: Actions -> Download file"

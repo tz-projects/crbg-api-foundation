@@ -8,7 +8,7 @@ This is for whoever owns AWS. You've been given three zip files. This sheet tell
 |---|---|
 | `scanner-deps-layer.zip` | A **Lambda Layer** — the scanner's Python dependencies |
 | `scanner-code.zip` | The **scanner** function's code |
-| `reports-code.zip` | The **reports** function's code |
+| `reports-code.zip` | The **reports** function's code (bundles reportlab for PDF output — ~10 MB) |
 
 ## What you'll create
 
@@ -69,10 +69,10 @@ Then:
 |---|---|---|
 | **Code → Upload from → .zip file** | code | `reports-code.zip` |
 | **Runtime settings → Edit** | Handler | `lambda_handler.handler` |
-| **Configuration → General configuration → Edit** | Timeout | `1 min` |
-| | Memory | `512 MB` |
+| **Configuration → General configuration → Edit** | Timeout | `2 min` |
+| | Memory | `1024 MB` |
 
-No layer, no environment variables for this one.
+No layer, no environment variables for this one. (The higher memory is for the PDF rendering; 512 MB works for HTML-only but PDF wants more headroom.)
 
 ---
 
@@ -97,7 +97,7 @@ Expect a `200` response whose `scan` field holds the scan results. (No `limit` =
 }
 ```
 
-Expect a `200` with `executive_html`, `platform_html`, and `findings_csv` fields.
+Expect a `200` with `executive_html`, `platform_html`, and `findings_csv` fields — plus `executive_pdf_base64` and `platform_pdf_base64` (the PDFs, base64-encoded). Decode those with `base64 -d` to get `.pdf` files. (Send `"pdf": false` in the event to skip PDF generation.)
 
 ---
 

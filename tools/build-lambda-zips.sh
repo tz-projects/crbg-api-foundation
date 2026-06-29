@@ -50,11 +50,26 @@ echo "==> [2/3] scanner-code.zip ..."
 rm -f "$OUT_DIR/scanner-code.zip"
 ( cd "$SCANNER_PY/src" && zip -r -q "$OUT_DIR/scanner-code.zip" swagger_studio_scanner -x '*/__pycache__/*' )
 
-# ---- 3. Reports code (pure Python, files at zip root) -------------------
-echo "==> [3/3] reports-code.zip ..."
+# ---- 3. Reports code (+ reportlab/pillow for PDF, manylinux wheels) ------
+echo "==> [3/3] reports-code.zip  (5 modules + reportlab/pillow for PDF) ..."
+RSTAGE="$STAGE/reports"
+mkdir -p "$RSTAGE"
+cp "$REPORTS/lambda_handler.py" \
+   "$REPORTS/generate_executive_report.py" \
+   "$REPORTS/generate_platform_report.py" \
+   "$REPORTS/generate_pdf_reports.py" \
+   "$REPORTS/_lib.py" \
+   "$RSTAGE/"
+pip install \
+    -r "$REPORTS/requirements-pdf.txt" \
+    --target "$RSTAGE" \
+    --python-version "$PYVER" \
+    --only-binary=:all: \
+    --platform manylinux2014_x86_64 \
+    --quiet
+find "$RSTAGE" -type d -name '__pycache__' -prune -exec rm -rf {} + 2>/dev/null || true
 rm -f "$OUT_DIR/reports-code.zip"
-( cd "$REPORTS" && zip -j -q "$OUT_DIR/reports-code.zip" \
-    lambda_handler.py generate_executive_report.py generate_platform_report.py _lib.py )
+( cd "$RSTAGE" && zip -r -q "$OUT_DIR/reports-code.zip" . )
 
 echo ""
 echo "Built in $OUT_DIR :"

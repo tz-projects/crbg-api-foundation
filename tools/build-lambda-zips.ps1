@@ -58,13 +58,24 @@ try {
     Get-ChildItem $pkgStage -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
     Compress-Archive -Path (Join-Path $pkgStage 'swagger_studio_scanner') -DestinationPath $scannerZip
 
-    # ---- 3. Reports code (pure Python — files at zip root) --------------
-    Write-Host "==> reports-code.zip ..."
+    # ---- 3. Reports code (+ reportlab/pillow for PDF, manylinux) --------
+    Write-Host "==> reports-code.zip  (5 modules + reportlab/pillow for PDF) ..."
     $reportsZip = Join-Path $OutDir 'reports-code.zip'
     if (Test-Path $reportsZip) { Remove-Item $reportsZip -Force }
-    $reportFiles = @('lambda_handler.py','generate_executive_report.py','generate_platform_report.py','_lib.py') |
-        ForEach-Object { Join-Path $Reports $_ }
-    Compress-Archive -Path $reportFiles -DestinationPath $reportsZip
+    $rStage = Join-Path $Stage 'reports'
+    New-Item -ItemType Directory -Force -Path $rStage | Out-Null
+    @('lambda_handler.py','generate_executive_report.py','generate_platform_report.py','generate_pdf_reports.py','_lib.py') |
+        ForEach-Object { Copy-Item (Join-Path $Reports $_) $rStage }
+    & python -m pip install `
+        -r (Join-Path $Reports 'requirements-pdf.txt') `
+        --target $rStage `
+        --python-version $PyVersion `
+        --only-binary=:all: `
+        --platform manylinux2014_x86_64 `
+        --quiet
+    Get-ChildItem $rStage -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue |
+        Remove-Item -Recurse -Force
+    Compress-Archive -Path (Join-Path $rStage '*') -DestinationPath $reportsZip
 
     # ---- 1. Dependency layer (manylinux wheels via pip --platform) ------
     Write-Host "==> scanner-deps-layer.zip  (downloading manylinux wheels for python$PyVersion) ..."

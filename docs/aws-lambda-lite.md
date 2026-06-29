@@ -89,7 +89,9 @@ SCAN_LIMIT=25 ORG_DISPLAY_NAME="Your Org" bash run-lambda-lite.sh
 # omit SCAN_LIMIT for a full scan
 ```
 
-This invokes the scanner, pipes its inline `scan.json` into the reports Lambda, and writes `lite-output/executive-report.html`, `platform-report.html`, and `findings.csv`. Download them with CloudShell **Actions → Download file**.
+This invokes the scanner, pipes its inline `scan.json` into the reports Lambda, and writes `lite-output/executive-report.html`, `platform-report.html`, `findings.csv`, and — since the reports package bundles reportlab — `executive-report.pdf` and `platform-report.pdf`. Download them with CloudShell **Actions → Download file**.
+
+> **PDFs:** the reports function returns the PDFs base64-encoded (`executive_pdf_base64` / `platform_pdf_base64`); `run-lambda-lite.sh` decodes them automatically. They're rendered directly from the scan data by reportlab — no browser, works in Lambda. Send `"pdf": false` in the reports payload to skip them.
 
 ---
 

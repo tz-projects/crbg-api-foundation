@@ -45,8 +45,9 @@ try {
     Copy-Item (Join-Path $ScannerPy 'requirements.txt') $Bundle
     Copy-Item (Join-Path $ScannerPy 'src') (Join-Path $Bundle 'src') -Recurse
 
-    # Reports source
-    @('lambda_handler.py','generate_executive_report.py','generate_platform_report.py','_lib.py') |
+    # Reports source (+ generate_pdf_reports.py + requirements-pdf.txt for PDF)
+    @('lambda_handler.py','generate_executive_report.py','generate_platform_report.py',
+      'generate_pdf_reports.py','_lib.py','requirements-pdf.txt') |
         ForEach-Object { Copy-Item (Join-Path $Reports $_) (Join-Path $Bundle 'reports') }
 
     # Bundled scripts

@@ -39,11 +39,14 @@ mkdir -p "$BUNDLE/reports"
 cp "$SCANNER_PY/requirements.txt" "$BUNDLE/"
 cp -r "$SCANNER_PY/src" "$BUNDLE/src"
 
-# Reports source (the 4 stdlib files)
+# Reports source (HTML generators are stdlib; generate_pdf_reports + the
+# pinned PDF deps file enable optional PDF output via reportlab)
 cp "$REPORTS/lambda_handler.py" \
    "$REPORTS/generate_executive_report.py" \
    "$REPORTS/generate_platform_report.py" \
+   "$REPORTS/generate_pdf_reports.py" \
    "$REPORTS/_lib.py" \
+   "$REPORTS/requirements-pdf.txt" \
    "$BUNDLE/reports/"
 
 # Bundled scripts

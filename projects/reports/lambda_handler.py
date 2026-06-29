@@ -91,9 +91,48 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             "--studio-base-url", studio_base,
         ])
 
-        return {
+        response = {
             "statusCode": 200,
             "executive_html": exec_out.read_text(encoding="utf-8"),
             "platform_html": (platform_dir / "index.html").read_text(encoding="utf-8"),
             "findings_csv": (platform_dir / "findings.csv").read_text(encoding="utf-8"),
         }
+
+        # PDFs are optional — produced only when reportlab is bundled in the
+        # package (returned base64-encoded since PDF is binary). Set the event
+        # field "pdf": false to skip even when available.
+        if event.get("pdf", True):
+            response.update(_maybe_pdfs(scan, org_display, studio_base, work, event))
+
+        return response
+
+
+def _maybe_pdfs(
+    scan: dict[str, Any],
+    org_display: str,
+    studio_base: str,
+    work: Path,
+    event: dict[str, Any],
+) -> dict[str, str]:
+    """Return base64 PDFs if reportlab is available, else a skip note."""
+    try:
+        import base64
+
+        import _lib as L  # noqa: PLC0415
+        import generate_pdf_reports as gpdf  # noqa: PLC0415
+
+        if not gpdf.REPORTLAB_AVAILABLE:
+            return {"pdf_warning": "PDFs skipped: reportlab not in this package."}
+
+        normalized = L.normalize(scan, {}, {}, None)
+        pdf_dir = work / "pdf"
+        exec_pdf, plat_pdf = gpdf.build_all(
+            normalized, org_display, pdf_dir, studio_base,
+            placeholder=bool(event.get("placeholder_ask")),
+        )
+        return {
+            "executive_pdf_base64": base64.b64encode(exec_pdf.read_bytes()).decode("ascii"),
+            "platform_pdf_base64": base64.b64encode(plat_pdf.read_bytes()).decode("ascii"),
+        }
+    except Exception as e:  # noqa: BLE001 - never fail the HTML response over a PDF
+        return {"pdf_warning": f"PDF generation skipped: {e}"}

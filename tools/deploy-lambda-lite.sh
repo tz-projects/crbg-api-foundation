@@ -47,10 +47,17 @@ echo "==> Building scanner layer + code (python${PY_VERSION}) ..."
 bash build-scanner-layer.sh . "$BUILD" "$PY_VERSION" >/dev/null
 echo "    layer: $(du -h "$BUILD/scanner-deps-layer.zip" | cut -f1)   code: $(du -h "$BUILD/scanner-code.zip" | cut -f1)"
 
-echo "==> Building reports zip ..."
+echo "==> Building reports zip (+ reportlab/pillow for PDF) ..."
 rm -f "$BUILD/reports-lambda.zip"
-( cd reports && zip -j -q "$BUILD/reports-lambda.zip" \
-    lambda_handler.py generate_executive_report.py generate_platform_report.py _lib.py )
+RSTAGE="$BUILD/reports-stage"
+rm -rf "$RSTAGE"; mkdir -p "$RSTAGE"
+cp reports/lambda_handler.py reports/generate_executive_report.py \
+   reports/generate_platform_report.py reports/generate_pdf_reports.py \
+   reports/_lib.py "$RSTAGE/"
+pip install -r reports/requirements-pdf.txt --target "$RSTAGE" \
+    --python-version "$PY_VERSION" --only-binary=:all: --platform manylinux2014_x86_64 --quiet
+find "$RSTAGE" -type d -name '__pycache__' -prune -exec rm -rf {} + 2>/dev/null || true
+( cd "$RSTAGE" && zip -r -q "$BUILD/reports-lambda.zip" . )
 
 echo "==> Publishing dependency layer ..."
 LAYER_ARN=$(aws lambda publish-layer-version \
@@ -98,7 +105,7 @@ else
         --handler lambda_handler.handler \
         --zip-file "fileb://$BUILD/reports-lambda.zip" \
         --role "$LAMBDA_ROLE_ARN" \
-        --timeout 60 --memory-size 512 \
+        --timeout 120 --memory-size 1024 \
         "${REGION_ARG[@]}" >/dev/null
     echo "    created"
 fi

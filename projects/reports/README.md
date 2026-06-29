@@ -38,6 +38,22 @@ python generate_platform_report.py \
 
 On Windows replace the backslash continuations with backticks (PowerShell) or put everything on one line.
 
+## PDF reports (optional)
+
+`generate_pdf_reports.py` produces `executive-report.pdf` and `platform-report.pdf` from the same `scan.json`. Unlike the HTML generators (standard-library only), it needs **reportlab** — a pure-Python install that runs anywhere (local, VDI, AWS Lambda), no browser required:
+
+```bash
+pip install -r requirements-pdf.txt        # reportlab + pillow
+
+python generate_pdf_reports.py \
+    --input ../swagger-studio-scanner/python/output/scan.json \
+    --output-dir output \
+    --org-display-name "Acme Corporation" \
+    --placeholder-ask
+```
+
+The PDFs are generated directly from the scan data (not converted from the HTML), so they render identically in every environment. The HTML path is unaffected and still needs no dependencies. On Lambda, the reports function returns the PDFs base64-encoded when reportlab is bundled in its package — see [docs/aws-lambda-lite.md](../../docs/aws-lambda-lite.md).
+
 ## Optional: PyYAML for richer ownership maps
 
 The Tier 2 ownership map and Tier 3 lookup files (`--ownership-map`, `--rule-display-names`, `--cop-guidance`) accept YAML or JSON. JSON works out of the box. **Flat** YAML (`key: value` per line) also works via a built-in fallback parser. **Nested** YAML (team / domain / contact-email blocks) needs PyYAML installed:
