@@ -6,28 +6,28 @@ This is for whoever owns AWS. You've been given three zip files. This sheet tell
 
 | File | What it is |
 |---|---|
-| `scanner-deps-layer.zip` | A **Lambda Layer** — the scanner's Python dependencies |
-| `scanner-code.zip` | The **scanner** function's code |
-| `reports-code.zip` | The **reports** function's code (bundles reportlab for PDF output — ~10 MB) |
+| `shared-deps-layer.zip` | A **single Lambda Layer** — ALL dependencies for both functions |
+| `scanner-code.zip` | The **scanner** function's code (tiny) |
+| `reports-code.zip` | The **reports** function's code (tiny) |
 
 ## What you'll create
 
-1. One Lambda **Layer** (from the deps zip)
+1. **One** Lambda **Layer** (from `shared-deps-layer.zip`)
 2. The **scanner** Lambda function (code zip + the layer + an API key)
-3. The **reports** Lambda function (code zip only)
+3. The **reports** Lambda function (code zip + **the same layer**)
 
-Both functions need a basic execution role (logging only — `AWSLambdaBasicExecutionRole`). No S3, no SSM, no custom policy.
+Both functions attach the **same** shared layer. Both need a basic execution role (logging only — `AWSLambdaBasicExecutionRole`). No S3, no SSM, no custom policy.
 
 ---
 
-## Step 1 — Create the Layer
+## Step 1 — Create the shared Layer
 
 1. AWS Console → **Lambda → Layers → Create layer**
-2. Name: `swagger-studio-scanner-deps`
-3. **Upload** `scanner-deps-layer.zip`
+2. Name: `swagger-studio-shared-deps`
+3. **Upload** `shared-deps-layer.zip`
 4. Compatible runtimes: **Python 3.13**
 5. **Create**
-6. **Copy the Layer Version ARN** it shows — you'll need it in Step 2.
+6. **Copy the Layer Version ARN** it shows — you'll attach it to **both** functions (Steps 2 and 3).
 
 ---
 
@@ -45,7 +45,7 @@ Then configure it:
 |---|---|---|
 | **Code → Upload from → .zip file** | code | `scanner-code.zip` |
 | **Runtime settings → Edit** | Handler | `swagger_studio_scanner.lambda_handler.handler` |
-| **Code → Layers → Add a layer → Custom layers** | layer | `swagger-studio-scanner-deps` (the ARN from Step 1) |
+| **Code → Layers → Add a layer → Custom layers** | layer | `swagger-studio-shared-deps` (the ARN from Step 1) |
 | **Configuration → Environment variables → Edit** | `SWAGGERHUB_API_KEY` | *(the API key — provided separately)* |
 | | `SWAGGERHUB_ORG` | *(the org slug — provided separately)* |
 | **Configuration → General configuration → Edit** | Timeout | `15 min` |
@@ -69,10 +69,11 @@ Then:
 |---|---|---|
 | **Code → Upload from → .zip file** | code | `reports-code.zip` |
 | **Runtime settings → Edit** | Handler | `lambda_handler.handler` |
+| **Code → Layers → Add a layer → Custom layers** | layer | `swagger-studio-shared-deps` (**same ARN as Step 2**) |
 | **Configuration → General configuration → Edit** | Timeout | `2 min` |
 | | Memory | `1024 MB` |
 
-No layer, no environment variables for this one. (The higher memory is for the PDF rendering; 512 MB works for HTML-only but PDF wants more headroom.)
+No environment variables for this one. It attaches the **same** shared layer as the scanner (that layer carries reportlab for PDF output). The higher memory is for PDF rendering.
 
 ---
 

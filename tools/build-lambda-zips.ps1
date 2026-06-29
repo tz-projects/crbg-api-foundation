@@ -58,34 +58,25 @@ try {
     Get-ChildItem $pkgStage -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
     Compress-Archive -Path (Join-Path $pkgStage 'swagger_studio_scanner') -DestinationPath $scannerZip
 
-    # ---- 3. Reports code (+ reportlab/pillow for PDF, manylinux) --------
-    Write-Host "==> reports-code.zip  (5 modules + reportlab/pillow for PDF) ..."
+    # ---- 3. Reports code (pure Python — deps come from the shared layer) -
+    Write-Host "==> reports-code.zip ..."
     $reportsZip = Join-Path $OutDir 'reports-code.zip'
     if (Test-Path $reportsZip) { Remove-Item $reportsZip -Force }
-    $rStage = Join-Path $Stage 'reports'
-    New-Item -ItemType Directory -Force -Path $rStage | Out-Null
-    @('lambda_handler.py','generate_executive_report.py','generate_platform_report.py','generate_pdf_reports.py','_lib.py') |
-        ForEach-Object { Copy-Item (Join-Path $Reports $_) $rStage }
-    & python -m pip install `
-        -r (Join-Path $Reports 'requirements-pdf.txt') `
-        --target $rStage `
-        --python-version $PyVersion `
-        --only-binary=:all: `
-        --platform manylinux2014_x86_64 `
-        --quiet
-    Get-ChildItem $rStage -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue |
-        Remove-Item -Recurse -Force
-    Compress-Archive -Path (Join-Path $rStage '*') -DestinationPath $reportsZip
+    $reportFiles = @('lambda_handler.py','generate_executive_report.py','generate_platform_report.py',
+                     'generate_pdf_reports.py','_lib.py') |
+        ForEach-Object { Join-Path $Reports $_ }
+    Compress-Archive -Path $reportFiles -DestinationPath $reportsZip
 
-    # ---- 1. Dependency layer (manylinux wheels via pip --platform) ------
-    Write-Host "==> scanner-deps-layer.zip  (downloading manylinux wheels for python$PyVersion) ..."
-    $layerZip = Join-Path $OutDir 'scanner-deps-layer.zip'
+    # ---- 1. Shared dependency layer (scanner + reports deps, manylinux) --
+    Write-Host "==> shared-deps-layer.zip  (all deps, manylinux wheels for python$PyVersion) ..."
+    $layerZip = Join-Path $OutDir 'shared-deps-layer.zip'
     $layerPy  = Join-Path $Stage 'layer\python'
     New-Item -ItemType Directory -Force -Path $layerPy | Out-Null
     $layerOk = $true
     try {
         & python -m pip install `
             -r (Join-Path $ScannerPy 'requirements.txt') `
+            -r (Join-Path $Reports 'requirements-pdf.txt') `
             --target $layerPy `
             --python-version $PyVersion `
             --only-binary=:all: `
@@ -106,18 +97,19 @@ try {
     Write-Host ("  {0,-26} {1}" -f 'scanner-code.zip',  (Get-Item $scannerZip).Length)
     Write-Host ("  {0,-26} {1}" -f 'reports-code.zip',  (Get-Item $reportsZip).Length)
     if ($layerOk) {
-        Write-Host ("  {0,-26} {1}" -f 'scanner-deps-layer.zip', (Get-Item $layerZip).Length)
+        Write-Host ("  {0,-26} {1}" -f 'shared-deps-layer.zip', (Get-Item $layerZip).Length)
     } else {
-        Write-Host "  scanner-deps-layer.zip   FAILED on this machine's pip." -ForegroundColor Yellow
+        Write-Host "  shared-deps-layer.zip   FAILED on this machine's pip." -ForegroundColor Yellow
         Write-Host ""
         Write-Host "  Build ONLY the layer in CloudShell instead:" -ForegroundColor Yellow
-        Write-Host "    mkdir -p python && pip install -r requirements.txt --target python \\"
+        Write-Host "    mkdir -p python && pip install -r requirements.txt -r requirements-pdf.txt --target python \\"
         Write-Host "        --python-version $PyVersion --only-binary=:all: --platform manylinux2014_x86_64"
-        Write-Host "    zip -r scanner-deps-layer.zip python"
-        Write-Host "  (upload the scanner's requirements.txt to CloudShell first)"
+        Write-Host "    zip -r shared-deps-layer.zip python"
+        Write-Host "  (upload both requirements files to CloudShell first)"
     }
     Write-Host ""
     Write-Host "Hand the zips to whoever creates the Lambda functions. Settings: docs/aws-lambda-handoff.md"
+    Write-Host "  (one layer, attached to BOTH functions)"
 }
 finally {
     Remove-Item $Stage -Recurse -Force -ErrorAction SilentlyContinue

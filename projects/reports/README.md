@@ -52,7 +52,7 @@ python generate_pdf_reports.py \
     --placeholder-ask
 ```
 
-The PDFs are generated directly from the scan data (not converted from the HTML), so they render identically in every environment. The HTML path is unaffected and still needs no dependencies. On Lambda, the reports function returns the PDFs base64-encoded when reportlab is bundled in its package — see [docs/aws-lambda-lite.md](../../docs/aws-lambda-lite.md).
+The PDFs are generated directly from the scan data (not converted from the HTML), so they render identically in every environment. The HTML path is unaffected and still needs no dependencies. On Lambda, the reports function returns the PDFs base64-encoded when reportlab is available in its environment (it ships in the shared dependency layer) — see [docs/aws-lambda-lite.md](../../docs/aws-lambda-lite.md).
 
 ## Optional: PyYAML for richer ownership maps
 

@@ -43,26 +43,30 @@ cd "$HERE"
 BUILD="$HERE/build"
 mkdir -p "$BUILD"
 
-echo "==> Building scanner layer + code (python${PY_VERSION}) ..."
-bash build-scanner-layer.sh . "$BUILD" "$PY_VERSION" >/dev/null
-echo "    layer: $(du -h "$BUILD/scanner-deps-layer.zip" | cut -f1)   code: $(du -h "$BUILD/scanner-code.zip" | cut -f1)"
-
-echo "==> Building reports zip (+ reportlab/pillow for PDF) ..."
-rm -f "$BUILD/reports-lambda.zip"
-RSTAGE="$BUILD/reports-stage"
-rm -rf "$RSTAGE"; mkdir -p "$RSTAGE"
-cp reports/lambda_handler.py reports/generate_executive_report.py \
-   reports/generate_platform_report.py reports/generate_pdf_reports.py \
-   reports/_lib.py "$RSTAGE/"
-pip install -r reports/requirements-pdf.txt --target "$RSTAGE" \
+echo "==> Building shared deps layer (scanner + reports, python${PY_VERSION}) ..."
+LAYER_PY="$BUILD/layer/python"
+rm -rf "$BUILD/layer"; mkdir -p "$LAYER_PY"
+pip install -r requirements.txt -r reports/requirements-pdf.txt --target "$LAYER_PY" \
     --python-version "$PY_VERSION" --only-binary=:all: --platform manylinux2014_x86_64 --quiet
-find "$RSTAGE" -type d -name '__pycache__' -prune -exec rm -rf {} + 2>/dev/null || true
-( cd "$RSTAGE" && zip -r -q "$BUILD/reports-lambda.zip" . )
+find "$BUILD/layer" -type d -name '__pycache__' -prune -exec rm -rf {} + 2>/dev/null || true
+rm -f "$BUILD/shared-deps-layer.zip"
+( cd "$BUILD/layer" && zip -r -q "$BUILD/shared-deps-layer.zip" python )
 
-echo "==> Publishing dependency layer ..."
+echo "==> Building scanner code zip ..."
+rm -f "$BUILD/scanner-code.zip"
+( cd src && zip -r -q "$BUILD/scanner-code.zip" swagger_studio_scanner -x '*/__pycache__/*' )
+
+echo "==> Building reports code zip ..."
+rm -f "$BUILD/reports-code.zip"
+( cd reports && zip -j -q "$BUILD/reports-code.zip" \
+    lambda_handler.py generate_executive_report.py generate_platform_report.py \
+    generate_pdf_reports.py _lib.py )
+echo "    layer: $(du -h "$BUILD/shared-deps-layer.zip" | cut -f1)   scanner: $(du -h "$BUILD/scanner-code.zip" | cut -f1)   reports: $(du -h "$BUILD/reports-code.zip" | cut -f1)"
+
+echo "==> Publishing shared dependency layer ..."
 LAYER_ARN=$(aws lambda publish-layer-version \
-    --layer-name "${SCANNER_FN}-deps" \
-    --zip-file "fileb://$BUILD/scanner-deps-layer.zip" \
+    --layer-name "swagger-studio-shared-deps" \
+    --zip-file "fileb://$BUILD/shared-deps-layer.zip" \
     --compatible-runtimes "python${PY_VERSION}" \
     "${REGION_ARG[@]}" \
     --query 'LayerVersionArn' --output text)
@@ -94,16 +98,20 @@ else
     echo "    created"
 fi
 
-echo "==> Deploying reports function ($REPORTS_FN) ..."
+echo "==> Deploying reports function ($REPORTS_FN) — same shared layer ..."
 if fn_exists "$REPORTS_FN"; then
     aws lambda update-function-code --function-name "$REPORTS_FN" \
-        --zip-file "fileb://$BUILD/reports-lambda.zip" "${REGION_ARG[@]}" >/dev/null
+        --zip-file "fileb://$BUILD/reports-code.zip" "${REGION_ARG[@]}" >/dev/null
+    aws lambda wait function-updated --function-name "$REPORTS_FN" "${REGION_ARG[@]}"
+    aws lambda update-function-configuration --function-name "$REPORTS_FN" \
+        --layers "$LAYER_ARN" --timeout 120 --memory-size 1024 "${REGION_ARG[@]}" >/dev/null
     echo "    updated"
 else
     aws lambda create-function --function-name "$REPORTS_FN" \
         --runtime "python${PY_VERSION}" \
         --handler lambda_handler.handler \
-        --zip-file "fileb://$BUILD/reports-lambda.zip" \
+        --zip-file "fileb://$BUILD/reports-code.zip" \
+        --layers "$LAYER_ARN" \
         --role "$LAMBDA_ROLE_ARN" \
         --timeout 120 --memory-size 1024 \
         "${REGION_ARG[@]}" >/dev/null

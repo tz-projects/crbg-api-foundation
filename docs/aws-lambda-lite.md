@@ -9,7 +9,7 @@ This is the variant on the `pure-python-aws-lambda-lite` branch. For the product
 
 > **When lite is the right choice:** trials, demos, partial/`--limit` scans, getting unblocked fast on a locked-down VDI. **When to graduate to heavy:** sensitive API keys (env vars are visible in the console) or full 600-API scans (a synchronous response caps at ~6 MB — small/limited scans are fine, full estate may exceed it).
 
-> **Just want to hand three zips to your AWS team?** Skip the deploy/run scripts. Run [`tools/build-lambda-zips.ps1`](../tools/build-lambda-zips.ps1) (VDI) to produce `scanner-deps-layer.zip`, `scanner-code.zip`, `reports-code.zip`, upload them to SharePoint, and give your team [aws-lambda-handoff.md](aws-lambda-handoff.md) — a click-by-click sheet for creating the functions. That's the lowest-overhead path.
+> **Just want to hand three zips to your AWS team?** Skip the deploy/run scripts. Run [`tools/build-lambda-zips.ps1`](../tools/build-lambda-zips.ps1) (VDI) to produce `shared-deps-layer.zip`, `scanner-code.zip`, `reports-code.zip` (one shared layer for both functions), upload them to SharePoint, and give your team [aws-lambda-handoff.md](aws-lambda-handoff.md) — a click-by-click sheet for creating the functions. That's the lowest-overhead path.
 
 ## Architecture
 
@@ -80,7 +80,7 @@ export LAMBDA_ROLE_ARN=arn:aws:iam::123456789012:role/your-basic-lambda-role
 bash deploy-lambda-lite.sh
 ```
 
-The script builds the scanner layer + code and the reports zip, publishes the layer, and creates both functions (re-running it later updates them in place). The API key goes into the scanner's env vars — no SSM.
+The script builds **one shared dependency layer** (scanner + reports deps) plus the two small code zips, publishes the layer, and creates both functions — attaching the same layer to each (re-running it later updates them in place). The API key goes into the scanner's env vars — no SSM.
 
 ### Part 3 — Run (CloudShell)
 
