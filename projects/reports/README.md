@@ -40,7 +40,26 @@ On Windows replace the backslash continuations with backticks (PowerShell) or pu
 
 ## PDF reports (optional)
 
-`generate_pdf_reports.py` produces `executive-report.pdf` and `platform-report.pdf` from the same `scan.json`. Unlike the HTML generators (standard-library only), it needs **reportlab** — a pure-Python install that runs anywhere (local, VDI, AWS Lambda), no browser required:
+There are **two** ways to get PDFs — pick based on whether you need PDFs in Lambda or want them to match the HTML exactly.
+
+### Option A — export the HTML to PDF (matches the HTML exactly)
+
+[`tools/html-to-pdf.py`](../../tools/html-to-pdf.py) drives a browser that's already on your machine (Edge on the Windows VDI, Chrome/Chromium on macOS/Linux) to print the generated HTML reports to PDF. **No pip install** — and because it renders the real HTML+CSS, the PDF looks exactly like the HTML report.
+
+```bash
+# After generating the HTML reports (above), convert them:
+python ../../tools/html-to-pdf.py \
+    output/executive-report.html \
+    output/platform-report/index.html \
+    --out-dir output
+# -> output/executive-report.pdf, output/platform-report.pdf
+```
+
+This needs a browser, so it's a **local / VDI step — not Lambda**. That's usually fine: reports are typically finalized locally. Edge auto-detects on Windows; pass `--browser <path>` if needed.
+
+### Option B — generate the PDF directly (runs anywhere, incl. Lambda)
+
+`generate_pdf_reports.py` builds the PDF from the scan data using **reportlab** (a pure-Python install). It runs anywhere — including AWS Lambda — with no browser, but its layout is its own (it does **not** match the HTML).
 
 ```bash
 pip install -r requirements-pdf.txt        # reportlab + pillow
@@ -52,7 +71,18 @@ python generate_pdf_reports.py \
     --placeholder-ask
 ```
 
-The PDFs are generated directly from the scan data (not converted from the HTML), so they render identically in every environment. The HTML path is unaffected and still needs no dependencies. On Lambda, the reports function returns the PDFs base64-encoded when reportlab is available in its environment (it ships in the shared dependency layer) — see [docs/aws-lambda-lite.md](../../docs/aws-lambda-lite.md).
+On Lambda, the reports function returns these PDFs base64-encoded when reportlab is available (it ships in the shared dependency layer) — see [docs/aws-lambda-lite.md](../../docs/aws-lambda-lite.md).
+
+### Which to use
+
+| | Option A (HTML → PDF) | Option B (reportlab) |
+|---|---|---|
+| Matches the HTML layout | **Yes** | No (own layout) |
+| Needs a browser | Yes (local/VDI) | No |
+| Runs on Lambda | No | **Yes** |
+| Extra install | none | `pip install reportlab` |
+
+Running reports locally on the VDI? **Option A** is the natural fit — Edge is already there and the PDF matches the HTML. The HTML generators themselves stay standard-library only either way.
 
 ## Optional: PyYAML for richer ownership maps
 
