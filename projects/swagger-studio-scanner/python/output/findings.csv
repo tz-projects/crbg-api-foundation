@@ -1,22 +1,17 @@
 owner,api,version,status,rule,severity,description,line,path,error,scanned_at
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,info-contact,CRITICAL,info-contact -> info.contact is required,1,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,info-license,CRITICAL,info-license -> info.license is required,1,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-operationId,CRITICAL,operation-operationId -> Every operation must have an operationId,19,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-summary,WARNING,operation-summary -> Every operation must have a summary,19,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-tags,WARNING,operation-tags -> Every operation must have at least one tag,19,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,owasp-api2-operation-security-defined,CRITICAL,owasp-api2-operation-security-defined -> Operation must declare a non-empty `security` requirement (OWASP API2:2023),19,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,response-success-content,CRITICAL,response-success-content -> 2xx response must declare content,21,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,response-description,WARNING,response-description -> Response description must be present (>= 5 chars),22,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-operationId,CRITICAL,operation-operationId -> Every operation must have an operationId,23,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-summary,WARNING,operation-summary -> Every operation must have a summary,23,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-tags,WARNING,operation-tags -> Every operation must have at least one tag,23,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,owasp-api2-operation-security-defined,CRITICAL,owasp-api2-operation-security-defined -> Operation must declare a non-empty `security` requirement (OWASP API2:2023),23,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,response-success-content,CRITICAL,response-success-content -> 2xx response must declare content,25,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,response-description,WARNING,response-description -> Response description must be present (>= 5 chars),26,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-operationId,CRITICAL,operation-operationId -> Every operation must have an operationId,28,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-summary,WARNING,operation-summary -> Every operation must have a summary,28,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,operation-tags,WARNING,operation-tags -> Every operation must have at least one tag,28,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,owasp-api2-operation-security-defined,CRITICAL,owasp-api2-operation-security-defined -> Operation must declare a non-empty `security` requirement (OWASP API2:2023),28,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,response-success-content,CRITICAL,response-success-content -> 2xx response must declare content,36,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-bad-petstore,1.0.0,fail,response-description,WARNING,response-description -> Response description must be present (>= 5 chars),37,,,2026-06-02T11:56:21.682628+00:00
-sparklayerinc,scanner-good-petstore,1.0.0,pass,,,,,,,2026-06-02T11:56:21.682881+00:00
+febthawinc,scanner-bad-petstore,1.0.0,fail,swaggerhub-api-contact-required,CRITICAL,swaggerhub-api-contact-required -> `#/info` is missing a required non-empty field `contact`,1,,,2026-07-01T04:00:09.560226+00:00
+febthawinc,scanner-bad-petstore,1.0.0,fail,swaggerhub-api-description-required,CRITICAL,swaggerhub-api-description-required -> `#/info` is missing a required non-empty field `description`,1,,,2026-07-01T04:00:09.560226+00:00
+febthawinc,scanner-bad-petstore,1.0.0,fail,swaggerhub-api-license-required,CRITICAL,swaggerhub-api-license-required -> `#/info` is missing a required non-empty field `license`,1,,,2026-07-01T04:00:09.560226+00:00
+febthawinc,scanner-bad-petstore,1.0.0,fail,swaggerhub-operation-description-required,CRITICAL,swaggerhub-operation-description-required -> `#/paths/~1things/get` is missing a required non-empty field `description`,19,,,2026-07-01T04:00:09.560226+00:00
+febthawinc,scanner-bad-petstore,1.0.0,fail,swaggerhub-operation-operationId-required,CRITICAL,swaggerhub-operation-operationId-required -> `#/paths/~1things/get` is missing a required non-empty field `operationId`,19,,,2026-07-01T04:00:09.560226+00:00
+febthawinc,scanner-bad-petstore,1.0.0,fail,swaggerhub-operation-summary-required,CRITICAL,swaggerhub-operation-summary-required -> `#/paths/~1things/get` is missing a required non-empty field `summary`,19,,,2026-07-01T04:00:09.560226+00:00
+febthawinc,scanner-bad-petstore,1.0.0,fail,swaggerhub-operation-tags-at-least-one,CRITICAL,swaggerhub-operation-tags-at-least-one -> `#/paths/~1things/get` is missing a required non-empty field `tag`,19,,,2026-07-01T04:00:09.560226+00:00
+febthawinc,scanner-bad-petstore,1.0.0,fail,swaggerhub-operation-description-required,CRITICAL,swaggerhub-operation-description-required -> `#/paths/~1things/post` is missing a required non-empty field `description`,23,,,2026-07-01T04:00:09.560226+00:00
+febthawinc,scanner-bad-petstore,1.0.0,fail,swaggerhub-operation-operationId-required,CRITICAL,swaggerhub-operation-operationId-required -> `#/paths/~1things/post` is missing a required non-empty field `operationId`,23,,,2026-07-01T04:00:09.560226+00:00
+febthawinc,scanner-bad-petstore,1.0.0,fail,swaggerhub-operation-summary-required,CRITICAL,swaggerhub-operation-summary-required -> `#/paths/~1things/post` is missing a required non-empty field `summary`,23,,,2026-07-01T04:00:09.560226+00:00
+febthawinc,scanner-bad-petstore,1.0.0,fail,swaggerhub-operation-tags-at-least-one,CRITICAL,swaggerhub-operation-tags-at-least-one -> `#/paths/~1things/post` is missing a required non-empty field `tag`,23,,,2026-07-01T04:00:09.560226+00:00
+febthawinc,scanner-bad-petstore,1.0.0,fail,swaggerhub-operation-description-required,CRITICAL,swaggerhub-operation-description-required -> `#/paths/~1things~1%7Bid%7D/get` is missing a required non-empty field `description`,28,,,2026-07-01T04:00:09.560226+00:00
+febthawinc,scanner-bad-petstore,1.0.0,fail,swaggerhub-operation-operationId-required,CRITICAL,swaggerhub-operation-operationId-required -> `#/paths/~1things~1%7Bid%7D/get` is missing a required non-empty field `operationId`,28,,,2026-07-01T04:00:09.560226+00:00
+febthawinc,scanner-bad-petstore,1.0.0,fail,swaggerhub-operation-summary-required,CRITICAL,swaggerhub-operation-summary-required -> `#/paths/~1things~1%7Bid%7D/get` is missing a required non-empty field `summary`,28,,,2026-07-01T04:00:09.560226+00:00
+febthawinc,scanner-bad-petstore,1.0.0,fail,swaggerhub-operation-tags-at-least-one,CRITICAL,swaggerhub-operation-tags-at-least-one -> `#/paths/~1things~1%7Bid%7D/get` is missing a required non-empty field `tag`,28,,,2026-07-01T04:00:09.560226+00:00
+febthawinc,scanner-good-petstore,1.0.0,pass,,,,,,,2026-07-01T04:00:09.560657+00:00

@@ -1,266 +1,249 @@
 {
-  "generated_at": "2026-06-02T11:56:21.443664+00:00",
+  "generated_at": "2026-07-01T04:00:09.399857+00:00",
   "ruleset": null,
+  "rule_display_names": {
+    "swaggerhub-api-description-required": "API description must be present and non-empty string",
+    "swaggerhub-model-properties-examples-required": "All model properties must have examples",
+    "swaggerhub-license-url-required": "License object must include url",
+    "swaggerhub-api-license-required": "API license must be present and non-empty string",
+    "swaggerhub-info-license-required": "Info object must have license object",
+    "swaggerhub-parameter-objects-description-required": "Parameter objects must have description",
+    "swaggerhub-info-description-required": "Info description must be present and non-empty string",
+    "swaggerhub-operation-summary-is-a-sentence": "Summary should start with upper case and end with a dot",
+    "swaggerhub-channel-path-empty-paramater-prohibited": "Channel path must not have empty parameter substitution pattern",
+    "swaggerhub-channels-operations-operationId-required": "Operation must have operationId",
+    "swaggerhub-tags-description-required": "Tag object must have description",
+    "swaggerhub-headers-schema-type-object-required": "Headers schema type must be object",
+    "swaggerhub-asyncapi-schema-latest-version": "AsyncAPI schema must be latest version (2.6.0)",
+    "swaggerhub-operation-tags-at-least-one": "Operation must have a tag and non-empty string",
+    "swaggerhub-operation-operationId-required": "OperationId must be present and non-empty string",
+    "swaggerhub-operation-tags-only-one": "Operation must have one and only one tag",
+    "swaggerhub-operation-summary-required": "Operation summary must be present and non-empty string",
+    "swaggerhub-server-url-ending-slash-prohibited": "Server URL must not end with slash",
+    "swaggerhub-asyncapi-tags-at-least-one": "AsyncAPI object must have non-empty tags array",
+    "swaggerhub-api-title-required": "API title must be present and non-empty string",
+    "swaggerhub-channels-operations-description-required": "Operation description must be present and non-empty string",
+    "swaggerhub-local-definitions-prohibited": "API must not have local definitions (i.e. only $refs are allowed)",
+    "swaggerhub-channel-path-ending-slash-prohibited": "Channel path must not end with slash",
+    "swaggerhub-operation-description-required": "Operation description must be present and non-empty string",
+    "swaggerhub-operation-default-response-required": "Operation must have a default response",
+    "swaggerhub-servers-at-least-one": "AsyncAPI object must have non-empty servers object",
+    "swaggerhub-api-contact-required": "API contact must be present and non-empty string",
+    "swaggerhub-channel-path-prohibited-characters": "Channel path must not include query (\"?\") or fragment (\"#\") delimiter"
+  },
   "summary": {
     "total_apis": 2,
     "passed": 1,
     "warned": 0,
     "failed": 1,
     "errored": 0,
-    "total_findings": 20,
-    "critical_findings": 11,
-    "warning_findings": 9
+    "total_findings": 15,
+    "critical_findings": 15,
+    "warning_findings": 0
   },
   "rule_pareto": [
     {
-      "rule": "operation-operationId",
+      "rule": "swaggerhub-operation-description-required",
       "severity": "CRITICAL",
       "count": 3,
-      "share_pct": 15.0,
-      "cumulative_pct": 15.0
+      "share_pct": 20.0,
+      "cumulative_pct": 20.0
     },
     {
-      "rule": "operation-summary",
-      "severity": "WARNING",
-      "count": 3,
-      "share_pct": 15.0,
-      "cumulative_pct": 30.0
-    },
-    {
-      "rule": "operation-tags",
-      "severity": "WARNING",
-      "count": 3,
-      "share_pct": 15.0,
-      "cumulative_pct": 45.0
-    },
-    {
-      "rule": "owasp-api2-operation-security-defined",
+      "rule": "swaggerhub-operation-operationId-required",
       "severity": "CRITICAL",
       "count": 3,
-      "share_pct": 15.0,
+      "share_pct": 20.0,
+      "cumulative_pct": 40.0
+    },
+    {
+      "rule": "swaggerhub-operation-summary-required",
+      "severity": "CRITICAL",
+      "count": 3,
+      "share_pct": 20.0,
       "cumulative_pct": 60.0
     },
     {
-      "rule": "response-success-content",
+      "rule": "swaggerhub-operation-tags-at-least-one",
       "severity": "CRITICAL",
       "count": 3,
-      "share_pct": 15.0,
-      "cumulative_pct": 75.0
+      "share_pct": 20.0,
+      "cumulative_pct": 80.0
     },
     {
-      "rule": "response-description",
-      "severity": "WARNING",
-      "count": 3,
-      "share_pct": 15.0,
-      "cumulative_pct": 90.0
-    },
-    {
-      "rule": "info-contact",
+      "rule": "swaggerhub-api-contact-required",
       "severity": "CRITICAL",
       "count": 1,
-      "share_pct": 5.0,
-      "cumulative_pct": 95.0
+      "share_pct": 6.7,
+      "cumulative_pct": 86.7
     },
     {
-      "rule": "info-license",
+      "rule": "swaggerhub-api-description-required",
       "severity": "CRITICAL",
       "count": 1,
-      "share_pct": 5.0,
+      "share_pct": 6.7,
+      "cumulative_pct": 93.3
+    },
+    {
+      "rule": "swaggerhub-api-license-required",
+      "severity": "CRITICAL",
+      "count": 1,
+      "share_pct": 6.7,
       "cumulative_pct": 100.0
     }
   ],
   "results": [
     {
       "api": {
-        "owner": "sparklayerinc",
+        "owner": "febthawinc",
         "name": "scanner-bad-petstore",
         "version": "1.0.0"
       },
       "status": "fail",
       "findings": [
         {
-          "rule": "info-contact",
+          "rule": "swaggerhub-api-contact-required",
           "severity": "CRITICAL",
-          "description": "info-contact -> info.contact is required",
-          "message": "info.contact is required",
+          "description": "swaggerhub-api-contact-required -> `#/info` is missing a required non-empty field `contact`",
+          "message": "`#/info` is missing a required non-empty field `contact`",
           "line": 1,
           "path": null
         },
         {
-          "rule": "info-license",
+          "rule": "swaggerhub-api-description-required",
           "severity": "CRITICAL",
-          "description": "info-license -> info.license is required",
-          "message": "info.license is required",
+          "description": "swaggerhub-api-description-required -> `#/info` is missing a required non-empty field `description`",
+          "message": "`#/info` is missing a required non-empty field `description`",
           "line": 1,
           "path": null
         },
         {
-          "rule": "operation-operationId",
+          "rule": "swaggerhub-api-license-required",
           "severity": "CRITICAL",
-          "description": "operation-operationId -> Every operation must have an operationId",
-          "message": "Every operation must have an operationId",
+          "description": "swaggerhub-api-license-required -> `#/info` is missing a required non-empty field `license`",
+          "message": "`#/info` is missing a required non-empty field `license`",
+          "line": 1,
+          "path": null
+        },
+        {
+          "rule": "swaggerhub-operation-description-required",
+          "severity": "CRITICAL",
+          "description": "swaggerhub-operation-description-required -> `#/paths/~1things/get` is missing a required non-empty field `description`",
+          "message": "`#/paths/~1things/get` is missing a required non-empty field `description`",
           "line": 19,
           "path": null
         },
         {
-          "rule": "operation-summary",
-          "severity": "WARNING",
-          "description": "operation-summary -> Every operation must have a summary",
-          "message": "Every operation must have a summary",
+          "rule": "swaggerhub-operation-operationId-required",
+          "severity": "CRITICAL",
+          "description": "swaggerhub-operation-operationId-required -> `#/paths/~1things/get` is missing a required non-empty field `operationId`",
+          "message": "`#/paths/~1things/get` is missing a required non-empty field `operationId`",
           "line": 19,
           "path": null
         },
         {
-          "rule": "operation-tags",
-          "severity": "WARNING",
-          "description": "operation-tags -> Every operation must have at least one tag",
-          "message": "Every operation must have at least one tag",
+          "rule": "swaggerhub-operation-summary-required",
+          "severity": "CRITICAL",
+          "description": "swaggerhub-operation-summary-required -> `#/paths/~1things/get` is missing a required non-empty field `summary`",
+          "message": "`#/paths/~1things/get` is missing a required non-empty field `summary`",
           "line": 19,
           "path": null
         },
         {
-          "rule": "owasp-api2-operation-security-defined",
+          "rule": "swaggerhub-operation-tags-at-least-one",
           "severity": "CRITICAL",
-          "description": "owasp-api2-operation-security-defined -> Operation must declare a non-empty `security` requirement (OWASP API2:2023)",
-          "message": "Operation must declare a non-empty `security` requirement (OWASP API2:2023)",
+          "description": "swaggerhub-operation-tags-at-least-one -> `#/paths/~1things/get` is missing a required non-empty field `tag`",
+          "message": "`#/paths/~1things/get` is missing a required non-empty field `tag`",
           "line": 19,
           "path": null
         },
         {
-          "rule": "response-success-content",
+          "rule": "swaggerhub-operation-description-required",
           "severity": "CRITICAL",
-          "description": "response-success-content -> 2xx response must declare content",
-          "message": "2xx response must declare content",
-          "line": 21,
-          "path": null
-        },
-        {
-          "rule": "response-description",
-          "severity": "WARNING",
-          "description": "response-description -> Response description must be present (>= 5 chars)",
-          "message": "Response description must be present (>= 5 chars)",
-          "line": 22,
-          "path": null
-        },
-        {
-          "rule": "operation-operationId",
-          "severity": "CRITICAL",
-          "description": "operation-operationId -> Every operation must have an operationId",
-          "message": "Every operation must have an operationId",
+          "description": "swaggerhub-operation-description-required -> `#/paths/~1things/post` is missing a required non-empty field `description`",
+          "message": "`#/paths/~1things/post` is missing a required non-empty field `description`",
           "line": 23,
           "path": null
         },
         {
-          "rule": "operation-summary",
-          "severity": "WARNING",
-          "description": "operation-summary -> Every operation must have a summary",
-          "message": "Every operation must have a summary",
+          "rule": "swaggerhub-operation-operationId-required",
+          "severity": "CRITICAL",
+          "description": "swaggerhub-operation-operationId-required -> `#/paths/~1things/post` is missing a required non-empty field `operationId`",
+          "message": "`#/paths/~1things/post` is missing a required non-empty field `operationId`",
           "line": 23,
           "path": null
         },
         {
-          "rule": "operation-tags",
-          "severity": "WARNING",
-          "description": "operation-tags -> Every operation must have at least one tag",
-          "message": "Every operation must have at least one tag",
+          "rule": "swaggerhub-operation-summary-required",
+          "severity": "CRITICAL",
+          "description": "swaggerhub-operation-summary-required -> `#/paths/~1things/post` is missing a required non-empty field `summary`",
+          "message": "`#/paths/~1things/post` is missing a required non-empty field `summary`",
           "line": 23,
           "path": null
         },
         {
-          "rule": "owasp-api2-operation-security-defined",
+          "rule": "swaggerhub-operation-tags-at-least-one",
           "severity": "CRITICAL",
-          "description": "owasp-api2-operation-security-defined -> Operation must declare a non-empty `security` requirement (OWASP API2:2023)",
-          "message": "Operation must declare a non-empty `security` requirement (OWASP API2:2023)",
+          "description": "swaggerhub-operation-tags-at-least-one -> `#/paths/~1things/post` is missing a required non-empty field `tag`",
+          "message": "`#/paths/~1things/post` is missing a required non-empty field `tag`",
           "line": 23,
           "path": null
         },
         {
-          "rule": "response-success-content",
+          "rule": "swaggerhub-operation-description-required",
           "severity": "CRITICAL",
-          "description": "response-success-content -> 2xx response must declare content",
-          "message": "2xx response must declare content",
-          "line": 25,
-          "path": null
-        },
-        {
-          "rule": "response-description",
-          "severity": "WARNING",
-          "description": "response-description -> Response description must be present (>= 5 chars)",
-          "message": "Response description must be present (>= 5 chars)",
-          "line": 26,
-          "path": null
-        },
-        {
-          "rule": "operation-operationId",
-          "severity": "CRITICAL",
-          "description": "operation-operationId -> Every operation must have an operationId",
-          "message": "Every operation must have an operationId",
+          "description": "swaggerhub-operation-description-required -> `#/paths/~1things~1%7Bid%7D/get` is missing a required non-empty field `description`",
+          "message": "`#/paths/~1things~1%7Bid%7D/get` is missing a required non-empty field `description`",
           "line": 28,
           "path": null
         },
         {
-          "rule": "operation-summary",
-          "severity": "WARNING",
-          "description": "operation-summary -> Every operation must have a summary",
-          "message": "Every operation must have a summary",
-          "line": 28,
-          "path": null
-        },
-        {
-          "rule": "operation-tags",
-          "severity": "WARNING",
-          "description": "operation-tags -> Every operation must have at least one tag",
-          "message": "Every operation must have at least one tag",
-          "line": 28,
-          "path": null
-        },
-        {
-          "rule": "owasp-api2-operation-security-defined",
+          "rule": "swaggerhub-operation-operationId-required",
           "severity": "CRITICAL",
-          "description": "owasp-api2-operation-security-defined -> Operation must declare a non-empty `security` requirement (OWASP API2:2023)",
-          "message": "Operation must declare a non-empty `security` requirement (OWASP API2:2023)",
+          "description": "swaggerhub-operation-operationId-required -> `#/paths/~1things~1%7Bid%7D/get` is missing a required non-empty field `operationId`",
+          "message": "`#/paths/~1things~1%7Bid%7D/get` is missing a required non-empty field `operationId`",
           "line": 28,
           "path": null
         },
         {
-          "rule": "response-success-content",
+          "rule": "swaggerhub-operation-summary-required",
           "severity": "CRITICAL",
-          "description": "response-success-content -> 2xx response must declare content",
-          "message": "2xx response must declare content",
-          "line": 36,
+          "description": "swaggerhub-operation-summary-required -> `#/paths/~1things~1%7Bid%7D/get` is missing a required non-empty field `summary`",
+          "message": "`#/paths/~1things~1%7Bid%7D/get` is missing a required non-empty field `summary`",
+          "line": 28,
           "path": null
         },
         {
-          "rule": "response-description",
-          "severity": "WARNING",
-          "description": "response-description -> Response description must be present (>= 5 chars)",
-          "message": "Response description must be present (>= 5 chars)",
-          "line": 37,
+          "rule": "swaggerhub-operation-tags-at-least-one",
+          "severity": "CRITICAL",
+          "description": "swaggerhub-operation-tags-at-least-one -> `#/paths/~1things~1%7Bid%7D/get` is missing a required non-empty field `tag`",
+          "message": "`#/paths/~1things~1%7Bid%7D/get` is missing a required non-empty field `tag`",
+          "line": 28,
           "path": null
         }
       ],
       "error": null,
-      "scanned_at": "2026-06-02T11:56:21.682628Z",
+      "scanned_at": "2026-07-01T04:00:09.560226Z",
       "meta": {
-        "created_at": "2026-05-28T19:24:59Z",
-        "modified_at": "2026-06-02T11:56:05Z",
+        "created_at": "2026-07-01T03:15:15Z",
+        "modified_at": "2026-07-01T03:15:15Z",
         "is_default_version": null,
         "is_published": false
       }
     },
     {
       "api": {
-        "owner": "sparklayerinc",
+        "owner": "febthawinc",
         "name": "scanner-good-petstore",
         "version": "1.0.0"
       },
       "status": "pass",
       "findings": [],
       "error": null,
-      "scanned_at": "2026-06-02T11:56:21.682881Z",
+      "scanned_at": "2026-07-01T04:00:09.560657Z",
       "meta": {
-        "created_at": "2026-05-28T19:24:58Z",
-        "modified_at": "2026-06-02T11:56:04Z",
+        "created_at": "2026-07-01T03:15:14Z",
+        "modified_at": "2026-07-01T03:15:14Z",
         "is_default_version": null,
         "is_published": false
       }

@@ -11,9 +11,7 @@ Usage:
         --output output/executive-report.html \\
         --org-display-name "Acme Corporation" \\
         [--ownership-map ownership.yaml] \\
-        [--rule-display-names rule_display_names.yaml] \\
-        [--asks-file asks.md] \\
-        [--placeholder-ask]
+        [--rule-display-names rule_display_names.yaml]
 """
 
 from __future__ import annotations
@@ -28,49 +26,13 @@ import _lib as L
 
 
 def _title_block(scan: L.NormalizedScan, org_display: str) -> str:
-    ruleset = L.esc(scan.ruleset_name) if scan.ruleset_name else "ruleset version not recorded by scanner"
     return f"""
       <header class="title-block">
         <h1>API Governance Conformance — Baseline Report</h1>
         <p class="subtitle">{L.esc(org_display)}</p>
         <p class="meta">Scan date: {L.esc(L.fmt_date(scan.scanned_at))}</p>
-        <p class="meta methodology-top">
-          Scanned {scan.api_count} APIs in Swagger Studio against {ruleset}.
-          {scan.error_count} API{"s" if scan.error_count != 1 else ""} could not be scanned and are excluded from conformance counts.
-        </p>
       </header>
     """
-
-
-def _headline_sentence(scan: L.NormalizedScan) -> str:
-    pareto = L.rule_pareto(scan, top_n=10_000)
-    if not pareto:
-        return f"""
-          <section class="headline">
-            <p>Of {scan.api_count} APIs in Swagger Studio, {L.fmt_pct(scan.pass_pct)}
-            currently pass governance. No rule-level findings were recorded.</p>
-          </section>
-        """
-    top_n = L.rules_to_reach(scan, threshold_pct=70.0)
-    top_share = pareto[top_n - 1].cumulative_pct if top_n else 0.0
-    distinct_rules = len(pareto)
-
-    # Concentration vs. scatter — the same data can support either framing;
-    # we pick based on whether 70% of findings sit in a small group.
-    if top_n and top_n <= max(1, distinct_rules // 2):
-        body = (
-            f"Of {scan.api_count} APIs in Swagger Studio, {L.fmt_pct(scan.fail_pct)} "
-            f"currently fail governance and cannot be published. Failures concentrate in "
-            f"{top_n} rule violation{'s' if top_n != 1 else ''} that account for "
-            f"{top_share:.0f}% of all findings."
-        )
-    else:
-        body = (
-            f"Of {scan.api_count} APIs in Swagger Studio, {L.fmt_pct(scan.fail_pct)} "
-            f"currently fail governance. Failures span {distinct_rules} distinct rule violations, "
-            f"indicating diffuse rather than concentrated quality issues."
-        )
-    return f'<section class="headline"><p>{L.esc(body)}</p></section>'
 
 
 def _headline_numbers(scan: L.NormalizedScan) -> str:
@@ -81,7 +43,7 @@ def _headline_numbers(scan: L.NormalizedScan) -> str:
     tiles = [
         ("APIs scanned", str(scan.api_count), "in Swagger Studio"),
         ("Pass rate", L.fmt_pct(scan.pass_pct), "of scannable APIs"),
-        ("Critical fails", L.fmt_pct(scan.fail_pct), "blocked from publish"),
+        ("Failure rate", L.fmt_pct(scan.fail_pct), "blocked from publish"),
         ("Distinct rule violations", str(distinct_rules), "driving findings"),
     ]
 
@@ -165,7 +127,7 @@ def _pareto_section(scan: L.NormalizedScan) -> str:
 
     return f"""
       <section class="section pareto">
-        <h2>Where the failures concentrate</h2>
+        <h2>Most frequently violated rules</h2>
         <ol class="pareto-list">{''.join(rows)}</ol>
         <p class="interp">{L.esc(interp)}</p>
       </section>
@@ -213,7 +175,7 @@ def _distribution_by_age_activity(scan: L.NormalizedScan) -> str:
     if not scan.has_age_data:
         return f"""
           <section class="section dist">
-            <h2>How the failures distribute</h2>
+            <h2>Recent API activity (last 90 days)</h2>
             <p class="muted">
               API age and modification metadata were not recorded by the scanner for this run,
               and the organizational ownership map is not yet configured. Once either is in
@@ -223,39 +185,31 @@ def _distribution_by_age_activity(scan: L.NormalizedScan) -> str:
           </section>
         """
 
-    buckets = L.age_buckets(scan)
-    r_total, r_fail, d_total, d_fail = L.recent_vs_dormant(scan, window_days=90)
-    age_rows = "".join(
-        f"<tr><td>{L.esc(b.label)}</td><td>{b.api_count}</td><td>{b.failing_count}</td></tr>"
-        for b in buckets
-    )
-    activity_rows = (
-        f"<tr><td>Modified in last 90 days</td><td>{r_total}</td><td>{r_fail}</td></tr>"
-        f"<tr><td>Dormant (90+ days)</td><td>{d_total}</td><td>{d_fail}</td></tr>"
-    )
+    def _rows(field: str) -> str:
+        return "".join(
+            f"<tr><td>{L.esc(b.label)}</td><td>{b.api_count}</td><td>{b.failing_count}</td></tr>"
+            for b in L.recency_buckets(scan, field)
+        )
+
     return f"""
       <section class="section dist">
-        <h2>How the failures distribute</h2>
+        <h2>Recent API activity (last 90 days)</h2>
         <div class="dist-grid">
           <div>
-            <h3>By API age</h3>
+            <h3>By creation date</h3>
             <table>
-              <thead><tr><th>Age (since created)</th><th>APIs</th><th>Failing</th></tr></thead>
-              <tbody>{age_rows}</tbody>
+              <thead><tr><th>Created</th><th>APIs</th><th>Failing</th></tr></thead>
+              <tbody>{_rows("created")}</tbody>
             </table>
           </div>
           <div>
-            <h3>By recent activity</h3>
+            <h3>By modification date</h3>
             <table>
-              <thead><tr><th>Activity</th><th>APIs</th><th>Failing</th></tr></thead>
-              <tbody>{activity_rows}</tbody>
+              <thead><tr><th>Modified</th><th>APIs</th><th>Failing</th></tr></thead>
+              <tbody>{_rows("modified")}</tbody>
             </table>
           </div>
         </div>
-        <p class="muted">
-          Detailed team and domain attribution will be available once the organizational
-          ownership map is in place; this report uses API age and activity as proxies.
-        </p>
       </section>
     """
 
@@ -265,49 +219,19 @@ def _severity_context(scan: L.NormalizedScan) -> str:
       <section class="section severity">
         <h2>Severity context</h2>
         <ul>
-          <li>{L.fmt_pct(scan.fail_pct)} of scannable APIs have CRITICAL errors (blocks publish).</li>
+          <li>{L.fmt_pct(scan.fail_pct)} of scannable APIs have errors (blocks publish).</li>
           <li>{L.fmt_pct(scan.warn_only_pct)} have WARNING-only findings (does not block publish, indicates quality gap).</li>
         </ul>
       </section>
     """
 
 
-def _ask_section(asks_text: str | None, placeholder: bool) -> str:
-    if placeholder or not asks_text:
-        body = "[Platform owner to specify the asks of leadership here]"
-        klass = "ask placeholder"
-    else:
-        body = asks_text.strip()
-        klass = "ask"
-    return f"""
-      <section class="section {klass}">
-        <h2>What's needed</h2>
-        <p>{L.esc(body)}</p>
-      </section>
-    """
-
-
 def _methodology_footer(scan: L.NormalizedScan) -> str:
-    ruleset = L.esc(scan.ruleset_name) if scan.ruleset_name else "ruleset version not recorded by scanner"
-    if scan.has_ownership:
-        ownership_line = (
-            f"Team and domain attribution: based on ownership map covering "
-            f"{int(scan.ownership_coverage_pct)}% of scanned APIs."
-        )
-    else:
-        ownership_line = (
-            "Team and domain attribution: ownership map not yet configured; "
-            "report uses API age and activity as organizational proxies where available."
-        )
     return f"""
       <footer class="methodology">
         <p>Scan date and time: {L.esc(L.fmt_datetime(scan.scanned_at))}</p>
-        <p>Total APIs in Studio at scan time: {scan.api_count}.
-           Successfully scanned: {scan.scannable_count}.
-           Scan errors: {scan.error_count}.</p>
-        <p>Ruleset active at scan time: {ruleset}.</p>
-        <p>{L.esc(ownership_line)}</p>
-        <p class="baseline">This is a baseline measurement. Future reports will show progress against it.</p>
+        <p>APIs evaluated: {scan.scannable_count} of {scan.api_count} in Studio
+           ({scan.error_count} could not be scanned).</p>
       </footer>
     """
 
@@ -344,8 +268,8 @@ _CSS = """
   .tile-sub   { font-size: 12px; color: #777; margin-top: 2px; }
   .section { margin: 32px 0; }
   .pareto-list { list-style: none; padding: 0; margin: 0; }
-  .pareto-row { display: grid; grid-template-columns: 260px 1fr 110px; gap: 12px; align-items: center; padding: 6px 0; }
-  .pareto-label { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pareto-row { display: grid; grid-template-columns: 300px 1fr 110px; gap: 12px; align-items: center; padding: 6px 0; }
+  .pareto-label { font-size: 14px; line-height: 1.3; overflow-wrap: break-word; }
   .pareto-bar-track { background: #eef0f4; height: 18px; border-radius: 3px; overflow: hidden; }
   .pareto-bar { background: #0b5fff; height: 100%; }
   .pareto-count { font-variant-numeric: tabular-nums; font-size: 13px; text-align: right; }
@@ -371,7 +295,7 @@ _CSS = """
 """
 
 
-def _render(scan: L.NormalizedScan, org_display: str, asks_text: str | None, placeholder: bool) -> str:
+def _render(scan: L.NormalizedScan, org_display: str) -> str:
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -381,12 +305,10 @@ def _render(scan: L.NormalizedScan, org_display: str, asks_text: str | None, pla
 </head>
 <body>
 {_title_block(scan, org_display)}
-{_headline_sentence(scan)}
 {_headline_numbers(scan)}
 {_pareto_section(scan)}
 {_distribution_section(scan)}
 {_severity_context(scan)}
-{_ask_section(asks_text, placeholder)}
 {_methodology_footer(scan)}
 </body>
 </html>
@@ -396,7 +318,7 @@ def _render(scan: L.NormalizedScan, org_display: str, asks_text: str | None, pla
 # ---- CLI --------------------------------------------------------------------
 
 
-def _summary_stdout(scan: L.NormalizedScan, asks_text: str | None, placeholder: bool) -> None:
+def _summary_stdout(scan: L.NormalizedScan) -> None:
     print("Executive report — render summary")
     print(f"  Tier 1 sections: title, headline, tiles 1-4, Pareto, severity, methodology")
     if scan.has_ownership and scan.ownership_coverage_pct >= 50.0:
@@ -414,7 +336,6 @@ def _summary_stdout(scan: L.NormalizedScan, asks_text: str | None, placeholder: 
     else:
         print("  Tier 1 substitute: total-findings tile + distribution shows 'data not available'")
     print(f"  Tier 3 rule display names: {'present' if scan.has_rule_display_lookup else 'not provided'}")
-    print(f"  Tier 3 asks file: {'placeholder mode' if (placeholder or not asks_text) else 'embedded'}")
     if not scan.ruleset_name:
         print("  Note: ruleset name/version not in scan input (scanner patch pending).")
     if not scan.has_age_data:
@@ -428,9 +349,6 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--org-display-name", required=True)
     p.add_argument("--ownership-map", type=Path, default=None)
     p.add_argument("--rule-display-names", type=Path, default=None)
-    p.add_argument("--asks-file", type=Path, default=None)
-    p.add_argument("--placeholder-ask", action="store_true",
-                   help="Force placeholder asks text even if --asks-file is provided.")
     args = p.parse_args(argv)
 
     scan_raw = L.load_scan(args.input)
@@ -443,16 +361,12 @@ def main(argv: list[str] | None = None) -> int:
         cop_guidance=None,
     )
 
-    asks_text = None
-    if args.asks_file and args.asks_file.exists() and not args.placeholder_ask:
-        asks_text = args.asks_file.read_text(encoding="utf-8")
-
-    html = _render(scan, args.org_display_name, asks_text, placeholder=args.placeholder_ask)
+    html = _render(scan, args.org_display_name)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(html, encoding="utf-8")
 
     print(f"Wrote {args.output}")
-    _summary_stdout(scan, asks_text, args.placeholder_ask)
+    _summary_stdout(scan)
     return 0
 
 

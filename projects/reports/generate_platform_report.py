@@ -82,7 +82,7 @@ def _write_csv(scan: L.NormalizedScan, studio_base: str, cop_guidance: dict[str,
                     **base,
                     "rule_id": fnd.rule_id,
                     "rule_humanized_name": fnd.rule_display,
-                    "severity": fnd.severity,
+                    "severity": L.sev_label(fnd.severity),
                     "line": fnd.line if fnd.line is not None else "",
                     "message": fnd.message,
                     "cop_guidance_url": cop_guidance.get(fnd.rule_id, ""),
@@ -94,11 +94,10 @@ def _write_csv(scan: L.NormalizedScan, studio_base: str, cop_guidance: dict[str,
 
 
 def _header(scan: L.NormalizedScan, org_display: str) -> str:
-    ruleset = L.esc(scan.ruleset_name) if scan.ruleset_name else "ruleset version not recorded"
     return f"""
       <header>
         <h1>API Governance Findings — Platform Team Report</h1>
-        <p class="meta">{L.esc(org_display)} &middot; scan {L.esc(L.fmt_date(scan.scanned_at))} &middot; {ruleset}</p>
+        <p class="meta">{L.esc(org_display)} &middot; scan {L.esc(L.fmt_date(scan.scanned_at))}</p>
         <p class="meta">
           {scan.api_count} APIs scanned &middot;
           <span class="pill pass">PASS {scan.pass_count}</span>
@@ -112,15 +111,11 @@ def _header(scan: L.NormalizedScan, org_display: str) -> str:
 
 
 def _howto(scan: L.NormalizedScan) -> str:
+    ownership_note = ""
     if scan.has_ownership:
         ownership_note = (
-            f"Ownership map covers {scan.ownership_coverage_pct:.0f}% of scanned APIs; "
-            "unmapped APIs appear in the Orphan section."
-        )
-    else:
-        ownership_note = (
-            "Ownership map is not yet configured: team / domain columns and the per-team "
-            "summary are unavailable; the report uses API age and rule grouping as substitutes."
+            f'<li class="muted">Ownership map covers {scan.ownership_coverage_pct:.0f}% of scanned APIs; '
+            "unmapped APIs appear in the Orphan section.</li>"
         )
     cop_note = (
         "CoP guidance links present."
@@ -135,7 +130,7 @@ def _howto(scan: L.NormalizedScan) -> str:
           <li>Each rule card links to its CoP remediation guidance (when published).</li>
           <li>Findings are sorted by API, then by severity descending.</li>
           <li>Questions: contact the platform team.</li>
-          <li class="muted">{L.esc(ownership_note)}</li>
+          {ownership_note}
           <li class="muted">{L.esc(cop_note)}</li>
         </ul>
       </section>
@@ -177,7 +172,7 @@ def _rule_cards(scan: L.NormalizedScan, cop_guidance: dict[str, str]) -> str:
             <header>
               <code>{L.esc(rule_id)}</code>
               <span class="rule-display">{L.esc(sample_finding.rule_display)}</span>
-              <span class="pill sev-{L.esc(sev.lower())}">{L.esc(sev)}</span>
+              <span class="pill sev-{L.esc(sev.lower())}">{L.esc(L.sev_label(sev))}</span>
             </header>
             <p>APIs failing: <strong>{apis_failing}</strong>
                &middot; Total findings: <strong>{len(entries)}</strong></p>
@@ -247,7 +242,7 @@ def _findings_table(scan: L.NormalizedScan, studio_base: str, cop_guidance: dict
         )
 
     rule_options = "".join(f'<option value="{L.esc(r)}">{L.esc(r)}</option>' for r in rules)
-    sev_options = "".join(f"<option>{s}</option>" for s in severities)
+    sev_options = "".join(f'<option value="{s}">{L.sev_label(s)}</option>' for s in severities)
     status_options = "".join(f"<option>{s}</option>" for s in statuses)
 
     # Column header set differs by tier; "Published" is a Tier 1 column
@@ -324,6 +319,9 @@ _FINDINGS_JS = r"""
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
+  // Display label only; the underlying value stays for filtering + pill class.
+  const sevLabel = s => (String(s).toUpperCase() === 'CRITICAL' ? 'ERROR' : s);
+
   const fmtLinks = r => {
     const parts = [];
     if (r.studio_url) parts.push(`<a href="${escapeHtml(r.studio_url)}" target="_blank" rel="noopener">Studio</a>`);
@@ -346,7 +344,7 @@ _FINDINGS_JS = r"""
     cells.push(escapeHtml(r.api_name));
     cells.push(escapeHtml(r.api_version));
     cells.push(`<code>${escapeHtml(r.rule_id)}</code><div class="cell-sub">${escapeHtml(r.rule_display)}</div>`);
-    cells.push(`<span class="pill sev-${escapeHtml(r.severity.toLowerCase())}">${escapeHtml(r.severity)}</span>`);
+    cells.push(`<span class="pill sev-${escapeHtml(r.severity.toLowerCase())}">${escapeHtml(sevLabel(r.severity))}</span>`);
     cells.push(escapeHtml(r.line));
     cells.push(escapeHtml(r.message));
     cells.push(fmtLinks(r));
@@ -402,7 +400,8 @@ _FINDINGS_JS = r"""
       ? ['team','api_name','api_version','rule_id','rule_display','severity','line','message','studio_url','cop_url']
       : ['api_name','api_version','rule_id','rule_display','severity','line','message','studio_url','cop_url','created_at','modified_at'];
     const esc = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
-    const body = [cols.join(',')].concat(rows.map(r => cols.map(c => esc(r[c])).join(','))).join('\n');
+    const cell = (r, c) => (c === 'severity' ? sevLabel(r[c]) : r[c]);
+    const body = [cols.join(',')].concat(rows.map(r => cols.map(c => esc(cell(r, c))).join(','))).join('\n');
     const blob = new Blob([body], {type: 'text/csv;charset=utf-8'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -460,7 +459,7 @@ def _per_team_summary(scan: L.NormalizedScan, per_team_dir_name: str) -> str:
         <table>
           <thead>
             <tr><th>Team</th><th>Domain</th><th>Contact</th><th>APIs</th><th>Failing</th>
-                <th>Crit / Warn</th><th>Top rules</th><th>Subset</th></tr>
+                <th>Errors / Warn</th><th>Top rules</th><th>Subset</th></tr>
           </thead>
           <tbody>{''.join(rows)}</tbody>
         </table>
@@ -482,7 +481,7 @@ def _per_rule_summary(scan: L.NormalizedScan) -> str:
           <tr>
             <td><a href="#rule-{L.esc(p.rule_id)}"><code>{L.esc(p.rule_id)}</code></a></td>
             <td>{L.esc(p.rule_display)}</td>
-            <td><span class="pill sev-{L.esc(p.severity.lower())}">{L.esc(p.severity)}</span></td>
+            <td><span class="pill sev-{L.esc(p.severity.lower())}">{L.esc(L.sev_label(p.severity))}</span></td>
             <td>{p.count}</td>
             <td>{len(apis)}</td>
             <td>{api_list}</td>
@@ -530,7 +529,7 @@ def _per_api_summary(scan: L.NormalizedScan, studio_base: str) -> str:
         findings_html = ""
         if api.findings:
             items = "".join(
-                f"<li><span class=\"pill sev-{L.esc(f.severity.lower())}\">{L.esc(f.severity)}</span> "
+                f"<li><span class=\"pill sev-{L.esc(f.severity.lower())}\">{L.esc(L.sev_label(f.severity))}</span> "
                 f"<code>{L.esc(f.rule_id)}</code> &mdash; {L.esc(f.message)}"
                 + (f" <span class=\"muted\">(line {f.line})</span>" if f.line is not None else "")
                 + "</li>"
@@ -549,7 +548,7 @@ def _per_api_summary(scan: L.NormalizedScan, studio_base: str) -> str:
               <span class="pill status-{L.esc(api.status)}">{L.esc(api.status.upper())}</span>
               {pub_pill}
               {default_pill}
-              <span class="muted">crit {api.critical_count} / warn {api.warning_count}</span>
+              <span class="muted">errors {api.critical_count} / warnings {api.warning_count}</span>
               <span class="muted">team: {team}</span>
               {dates_html}
               <a href="{L.esc(api.studio_url(studio_base))}" target="_blank" rel="noopener">open in Studio</a>
@@ -637,30 +636,24 @@ def _scan_errors_section(scan: L.NormalizedScan) -> str:
 
 
 def _methodology(scan: L.NormalizedScan) -> str:
-    ruleset = L.esc(scan.ruleset_name) if scan.ruleset_name else "ruleset version not recorded"
+    own_line = ""
     if scan.has_ownership:
         own_line = (
-            f"Ownership map: covers {scan.ownership_coverage_pct:.0f}% of scanned APIs."
-        )
-    else:
-        own_line = (
-            "Ownership map: not yet configured. Team/domain/contact columns and the per-team "
-            "summary are unavailable; the report falls back to a per-rule view and lists all "
-            "APIs in the Unmapped section."
+            f'<p>Ownership map: covers {scan.ownership_coverage_pct:.0f}% of scanned APIs.</p>'
         )
     return f"""
       <footer>
         <h2>Methodology and definitions</h2>
-        <p>Ruleset: {ruleset}. Scan timestamp: {L.esc(L.fmt_datetime(scan.scanned_at))}.</p>
+        <p>Scan timestamp: {L.esc(L.fmt_datetime(scan.scanned_at))}.</p>
         <p><strong>Status:</strong>
-          PASS = no findings; WARN = warnings only (publishable); FAIL = at least one CRITICAL
+          PASS = no findings; WARN = warnings only (publishable); FAIL = at least one ERROR
           finding (blocks publish); SCAN_ERROR = scanner could not evaluate the API.
         </p>
         <p><strong>Severity:</strong>
-          CRITICAL = governance violation that blocks publish; WARNING = quality gap that does
+          ERROR = governance violation that blocks publish; WARNING = quality gap that does
           not block publish but indicates non-conformance.
         </p>
-        <p>{L.esc(own_line)}</p>
+        {own_line}
         <p class="muted">To request a rule exception or report a false positive, contact the platform team.</p>
       </footer>
     """

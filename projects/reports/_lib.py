@@ -503,6 +503,47 @@ def age_buckets(scan: NormalizedScan) -> list[AgeBucket]:
     return buckets
 
 
+@dataclass
+class RecencyBucket:
+    label: str
+    api_count: int
+    failing_count: int
+
+
+# 30/60/90-day windows, measured back from scan time. Non-overlapping bands;
+# APIs whose date is older than 90 days (or absent) are intentionally excluded
+# — this section is a 90-day recency view, not a full-history age profile.
+_RECENCY_WINDOWS = [
+    ("Last 30 days", 0, 30),
+    ("30–60 days", 30, 60),
+    ("60–90 days", 60, 90),
+]
+
+
+def recency_buckets(scan: NormalizedScan, field: str) -> list[RecencyBucket]:
+    """Bucket APIs by days since ``created`` or ``modified`` into 30/60/90 bands.
+
+    ``field`` is ``"created"`` or ``"modified"``. APIs older than 90 days on the
+    chosen date, or missing it, are excluded (see ``_RECENCY_WINDOWS``).
+    """
+    if not scan.has_age_data or not scan.scanned_at:
+        return []
+    now = scan.scanned_at
+    buckets = [RecencyBucket(label=lbl, api_count=0, failing_count=0) for lbl, _, _ in _RECENCY_WINDOWS]
+    for api in scan.apis:
+        dt = api.created_at if field == "created" else api.modified_at
+        if not dt:
+            continue
+        days = (now - dt).days
+        for i, (_, lo, hi) in enumerate(_RECENCY_WINDOWS):
+            if lo <= days < hi:
+                buckets[i].api_count += 1
+                if api.status in ("fail", "warn"):
+                    buckets[i].failing_count += 1
+                break
+    return buckets
+
+
 def unpublished_failing_stats(scan: NormalizedScan) -> tuple[int, int]:
     """Return ``(unpublished_failing, total_failing_with_known_state)``.
 
@@ -603,6 +644,17 @@ def domain_summaries(scan: NormalizedScan) -> list[tuple[str, int, int]]:
 
 
 # --- Formatting ---------------------------------------------------------------
+
+
+# Severity display labels. The internal value stays "CRITICAL" (it drives
+# filtering, counts, and the sev-* pill CSS class); humans only ever see the
+# label mapped here. Blocking findings render as "ERROR" per house style.
+_SEVERITY_LABELS = {"CRITICAL": "ERROR"}
+
+
+def sev_label(severity: str) -> str:
+    """Map an internal severity value to its human-facing display label."""
+    return _SEVERITY_LABELS.get(severity.upper(), severity)
 
 
 def fmt_date(dt: datetime | None) -> str:
