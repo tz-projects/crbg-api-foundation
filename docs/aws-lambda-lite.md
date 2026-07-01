@@ -167,3 +167,4 @@ A synchronous Lambda response caps at ~6 MB, which bounds both the scanner's ret
 - [aws-lambda-runbook.md](aws-lambda-runbook.md) — the heavy (S3/SSM) flow, with the no-Git/no-Docker transport details
 - [aws-lambda-walkthrough.md](aws-lambda-walkthrough.md) — concepts + validation (mostly applies to both; ignore the S3/SSM-specific parts for lite)
 - [run-commands.md](run-commands.md) — running scanner/reports locally
+- [reports-vdi-handoff.md](reports-vdi-handoff.md) — colleague-facing sheet: run the reports (+ PDFs) on a VDI from `reports-code.zip`, no repo access
