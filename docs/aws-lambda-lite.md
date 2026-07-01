@@ -109,7 +109,7 @@ jq .scan scan-out.json > scan.json   # download scan.json to the VDI
 ```powershell
 # VDI: generate reports from scan.json (plain Python, no AWS, no network)
 cd projects\reports
-python generate_executive_report.py --input ..\..\scan.json --output executive-report.html --org-display-name "Your Org" --placeholder-ask
+python generate_executive_report.py --input ..\..\scan.json --output executive-report.html --org-display-name "Your Org"
 python generate_platform_report.py --input ..\..\scan.json --output-dir platform-report --org-display-name "Your Org" --studio-base-url https://app.swaggerhub.com/apis
 ```
 

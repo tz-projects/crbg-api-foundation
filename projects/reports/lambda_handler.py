@@ -19,7 +19,7 @@ Event schema:
         "scan":             { ... },   # REQUIRED — the scanner response's "scan"
         "org_display_name": str,       # REQUIRED
         "studio_base_url":  str,       # OPTIONAL (default app.swaggerhub.com/apis)
-        "placeholder_ask":  bool       # OPTIONAL — executive report placeholder
+        "placeholder_ask":  bool       # OPTIONAL — PDF executive report only
     }
 
 Response:
@@ -77,8 +77,6 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             "--output", str(exec_out),
             "--org-display-name", org_display,
         ]
-        if event.get("placeholder_ask"):
-            exec_argv.append("--placeholder-ask")
         _exec_report.main(exec_argv)
 
         # Platform report (writes index.html + findings.csv into a dir)
