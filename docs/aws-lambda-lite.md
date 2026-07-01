@@ -97,7 +97,18 @@ This invokes the scanner, pipes its inline `scan.json` into the reports Lambda, 
 
 ## Alternative: run the reports locally on the VDI
 
-The reports Lambda is *optional* — reports need no network, so you can skip the reports Lambda entirely and run them on the VDI from the scanner's output:
+The reports Lambda is *optional* — reports need no network, so you can skip the reports Lambda entirely and run them on the VDI from the scanner's output. In this flow **only the scanner runs in Lambda**; the reports (and matching PDFs) are pure Python + Edge on the VDI — no pip installs, no venv.
+
+### Package just the scanner
+
+Only the scanner's two artifacts are needed — build them with the existing zip builders (no new scripts):
+
+- **VDI (Windows PowerShell):** `.\tools\build-lambda-zips.ps1` → use `dist\scanner-code.zip` + `dist\shared-deps-layer.zip` (ignore `reports-code.zip`).
+- **Linux / CloudShell (bash):** `bash tools/build-lambda-zips.sh` — same outputs. For a leaner scanner-only layer (no reportlab), `bash tools/build-scanner-layer.sh` builds `scanner-deps-layer.zip` + `scanner-code.zip`.
+
+The code zip always builds offline; the **layer** needs PyPI (`pip --platform` Linux wheels for `pydantic-core`). Deps rarely change, so if the layer is already published, reuse it and hand over just `scanner-code.zip`. Function settings (handler / runtime / layer / env vars): [aws-lambda-handoff.md](aws-lambda-handoff.md).
+
+### Scan, then generate reports + PDFs on the VDI
 
 ```bash
 # CloudShell: scan only, save the scan.json
@@ -108,12 +119,17 @@ jq .scan scan-out.json > scan.json   # download scan.json to the VDI
 
 ```powershell
 # VDI: generate reports from scan.json (plain Python, no AWS, no network)
+git pull                              # pick up the latest report code first
 cd projects\reports
-python generate_executive_report.py --input ..\..\scan.json --output executive-report.html --org-display-name "Your Org"
-python generate_platform_report.py --input ..\..\scan.json --output-dir platform-report --org-display-name "Your Org" --studio-base-url https://app.swaggerhub.com/apis
+python generate_executive_report.py --input ..\..\scan.json --output output\executive-report.html --org-display-name "Your Org"
+python generate_platform_report.py --input ..\..\scan.json --output-dir output\platform-report --org-display-name "Your Org" --studio-base-url https://app.swaggerhub.com/apis
+
+# Export the HTML to matching PDFs (headless Edge)
+cd ..\..
+python tools\html-to-pdf.py projects\reports\output\executive-report.html projects\reports\output\platform-report\index.html
 ```
 
-That's the absolute simplest path: one Lambda (scanner), reports on the VDI.
+That's the absolute simplest path: one Lambda (scanner), reports + PDFs on the VDI.
 
 ---
 
