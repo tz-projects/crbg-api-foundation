@@ -124,3 +124,8 @@ class ScanReport(BaseModel):
     scanned_at: datetime
     ruleset: RulesetMeta | None = None
     results: list[ApiScanResult] = Field(default_factory=list)
+    # rule id -> human-readable title, fetched from Studio's rule definitions
+    # at scan time (where SwaggerHub is reachable) so the reports can show
+    # friendly names offline. Empty when unavailable; reports fall back to a
+    # humanized rule id. Additive/optional — older readers ignore it.
+    rule_display_names: dict[str, str] = Field(default_factory=dict)

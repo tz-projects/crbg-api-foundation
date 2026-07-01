@@ -45,8 +45,9 @@ async def scan_org(settings: Settings, *, limit: int | None = None) -> ScanRepor
     """
     started = datetime.now(UTC)
     async with SwaggerHubClient(settings) as client:
-        ruleset, listed = await asyncio.gather(
+        ruleset, rule_display_names, listed = await asyncio.gather(
             client.get_active_ruleset(settings.swaggerhub_org),
+            client.get_system_rule_display_names(),
             _enumerate(client, settings.swaggerhub_org, limit=limit),
         )
         log.info(
@@ -55,9 +56,15 @@ async def scan_org(settings: Settings, *, limit: int | None = None) -> ScanRepor
             limit=limit,
             org=settings.swaggerhub_org,
             ruleset=(ruleset.name if ruleset else None),
+            rule_names=len(rule_display_names),
         )
         results = await asyncio.gather(*[_scan_one(client, item) for item in listed])
-    return ScanReport(scanned_at=started, ruleset=ruleset, results=list(results))
+    return ScanReport(
+        scanned_at=started,
+        ruleset=ruleset,
+        results=list(results),
+        rule_display_names=rule_display_names,
+    )
 
 
 async def _enumerate(

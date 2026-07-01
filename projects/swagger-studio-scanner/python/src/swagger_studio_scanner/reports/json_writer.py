@@ -9,6 +9,10 @@ Schema (top-level):
 - ``generated_at``        : when the scan ran (ISO 8601 with TZ).
 - ``ruleset``             : ``{name, version}`` or ``null`` when Studio did
                             not expose it.
+- ``rule_display_names``  : ``{rule_id: friendly title}`` from Studio's rule
+                            definitions, or ``null`` when unavailable. Optional
+                            and additive — consumers fall back to a humanized
+                            rule id when a rule is absent.
 - ``summary``             : aggregated counts.
 - ``rule_pareto``         : top rules by failure count, with share %.
 - ``results[]``           : one entry per API version. Each carries its own
@@ -35,6 +39,7 @@ def write_json(report: ScanReport, out_dir: Path) -> Path:
     payload = {
         "generated_at": report.scanned_at.isoformat(),
         "ruleset": report.ruleset.model_dump(mode="json") if report.ruleset else None,
+        "rule_display_names": report.rule_display_names or None,
         "summary": {
             "total_apis": summary.total_apis,
             "passed": summary.passed,

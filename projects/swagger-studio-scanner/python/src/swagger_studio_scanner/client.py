@@ -142,6 +142,34 @@ class SwaggerHubClient:
             return []
         return [self._finding_parser.parse(e) for e in raw if isinstance(e, dict)]
 
+    async def get_system_rule_display_names(self) -> dict[str, str]:
+        """Return ``{rule_id: friendly title}`` for SwaggerHub's built-in rules.
+
+        The ``/standardization`` results carry only the rule id and a rendered
+        per-violation message — never the rule's human title. That title lives
+        in the rule *definition* (its ``description`` field) at the system-rules
+        endpoint. We fetch it here, at scan time, so the reports can render
+        friendly names offline.
+
+        Best-effort: swallows HTTP errors and returns ``{}`` so a scan never
+        fails because the rule catalog is unavailable.
+        """
+        try:
+            data = await self.get_json("/standardization/spectral/system-rules")
+        except httpx.HTTPError as e:
+            log.info("system_rules_unavailable", error=str(e))
+            return {}
+        rules = data.get("rules")
+        if not isinstance(rules, dict):
+            return {}
+        out: dict[str, str] = {}
+        for rule_id, definition in rules.items():
+            if isinstance(definition, dict):
+                desc = definition.get("description")
+                if isinstance(desc, str) and desc.strip():
+                    out[str(rule_id)] = desc.strip()
+        return out
+
     async def get_active_ruleset(self, owner: str) -> RulesetMeta | None:
         """Return the active org standardization ruleset, or ``None`` on miss.
 

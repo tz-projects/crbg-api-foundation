@@ -84,6 +84,14 @@ On Lambda, the reports function returns these PDFs base64-encoded when reportlab
 
 Running reports locally on the VDI? **Option A** is the natural fit — Edge is already there and the PDF matches the HTML. The HTML generators themselves stay standard-library only either way.
 
+## Rule display names — now auto-embedded by the scanner
+
+Studio's `/standardization` results only carry rule **ids** (e.g. `swaggerhub-operation-operationId-required`), not the friendly titles you see in the Studio UI. The scanner now fetches those titles from Studio's rule definitions at scan time and embeds them in `scan.json` under a top-level `rule_display_names` map. The reports pick them up automatically — no flag needed — so findings show *"Operation must have operationId"* instead of the raw id.
+
+- This is **additive and optional**: a `scan.json` without the map (older scans) still renders — findings just fall back to a humanized rule id.
+- `--rule-display-names <file>` still works and **overrides** the embedded titles per-rule if you want custom wording.
+- The fetch happens on the scanner side (where SwaggerHub is reachable); the reports stay fully offline.
+
 ## Optional: PyYAML for richer ownership maps
 
 The Tier 2 ownership map and Tier 3 lookup files (`--ownership-map`, `--rule-display-names`, `--cop-guidance`) accept YAML or JSON. JSON works out of the box. **Flat** YAML (`key: value` per line) also works via a built-in fallback parser. **Nested** YAML (team / domain / contact-email blocks) needs PyYAML installed:

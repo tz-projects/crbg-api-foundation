@@ -270,6 +270,15 @@ def normalize(
     results = scan.get("results") or []
     org = _infer_org(scan, results)
 
+    # Rule display names may be embedded in the scan (the scanner fetched them
+    # from Studio's rule definitions) and/or supplied via --rule-display-names.
+    # Merge both; the explicit lookup wins per-key so a caller can override the
+    # embedded titles. Absent both -> {} -> findings fall back to a humanized id.
+    embedded_names = scan.get("rule_display_names")
+    if not isinstance(embedded_names, dict):
+        embedded_names = {}
+    rule_display_lookup = {**embedded_names, **(rule_display_lookup or {})}
+
     apis: list[ApiView] = []
     age_data_seen = False
     matched = 0
